@@ -28,7 +28,7 @@ OpenStack -> DreamCompute<br />
 Available Instances:<br />
 Id Instance Name <br />
 1. instance_01<br />
-2. instance_02<br />      
+2. instance_02<br />
 3. instance_03<br />
 Which instance should we manage? (leave blank to create a new instance, enter 'exit' to leave): 1<br />
 Working with: instance_01	Status: SHUTOFF<br />
