@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+require_relative '../lib/danarchy_sys'
+
+os = DanarchySys::CLI::OpenStack::Compute.new
+
+instance = os.instance_chooser
+os.console(instance.name)
