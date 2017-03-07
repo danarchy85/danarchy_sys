@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'fileutils'
 require_relative '../lib/danarchy_sys'
 
 # dAanarchySys config file setup
@@ -15,7 +16,7 @@ class DanarchySysConfig
     danarchysys_config = load_config
 
     ssh_key_path = "#{File.expand_path('..', File.dirname(__FILE__))}/config/ssh"
-    Dir.mkdir(ssh_key_path) unless Dir.exist?(ssh_key_path)
+    FileUtils.mkdir_p(ssh_key_path) unless Dir.exist?(ssh_key_path)
     danarchysys_config[:settings][:ssh_key_path] = ssh_key_path
 
     @config_mgr.save(danarchysys_config)

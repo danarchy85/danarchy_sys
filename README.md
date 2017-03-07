@@ -56,7 +56,7 @@ command ~:
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/danarchy85/danarchy_sys.
+Bug reports are welcome on GitHub at https://github.com/danarchy85/danarchy_sys.
 
 
 ## License
