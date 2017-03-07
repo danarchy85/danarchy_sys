@@ -4,54 +4,54 @@ Welcome to dAnarchy Systems! This gem will assist you in easing the setup of Ope
 
 ## Installation
 
-Proper installation has not yet been set up. You will first need to set up an OpenStack connection configuration at your $HOME/.danarchysys_connection.rb which should contain something like this:
+Requires bundler to be installed already: 'gem install bundler'
 
-# Connection Settings for OpenStack
-class Connection<br />
-<br />
-  def self.openstack<br />
-    @os_connection_params = {<br />
-      openstack_auth_url:       "http://openstack-provider.com:5000/v2.0/tokens",<br />
-      openstack_username:       "openstack_username",<br />
-      openstack_api_key:        "openstack_api_key",<br />
-      openstack_tenant:         "openstack_tenant",<br />
-    }<br />
-  end<br />
-end<br />
-<br />
-Once you have created ~/.danarchysys_connection.rb, simply run 'bin/danarchy_sys' to initiate the DanarchySys CLI.
+Download danarchy_sys, 'cd' into its directory, then run 'sh bin/setup'. This will run bundler and install the required gems. It will then prompt for a new OpenStack setup.
+
+dAnarchySys config setup will be located at danarchy_sys/config/danarchysys.yml in YAML format like this:
+
+:connections:
+  :your_connection:
+    :openstack_auth_url: "http://openstack-provider.com:5000/v2.0/tokens",
+    :openstack_username: "openstack_username",
+    :openstack_api_key: "openstack_api_key",
+    :openstack_tenant: "openstack_tenant"
+:settings:
+  :ssh_key_path: PATH_TO_SSH_KEYS
+
 
 ## Usage
 
-ruby danarchy_sys <br />
-OpenStack -> DreamCompute<br />
-Available Instances:<br />
-Id Instance Name <br />
-1. instance_01<br />
-2. instance_02<br />
-3. instance_03<br />
-Which instance should we manage? (leave blank to create a new instance, enter 'exit' to leave): 1<br />
-Working with: instance_01	Status: SHUTOFF<br />
-Enter 'help' for all available commands.<br />
-command ~: help<br />
-dAnarchy_sys menu commands:<br />
-chooser: Return to instance selection<br />
-create: Create a new instance<br />
-commands: Outputs OpenStack Compute commands<br />
-help: Outputs this info<br />
+ruby danarchy_sys 
+OpenStack -> DreamCompute
+Available Instances:
+Id Instance Name         
+1. instance_01
+2. instance_02            
+3. instance_03
+Which instance should we manage? (leave blank to create a new instance, enter 'exit' to leave): 1
 
-OpenStack Compute commands (must first choose an instance): <br />
-status: Current running status of instance<br />
-connect: Connect to instance through SSH<br />
-pause: Pause instance (to RAM)<br />
-unpause: Unpause instance from paused state<br />
-suspend: Suspend Instance (to disk)<br />
-resume: Resume instance from suspended state<br />
-start: Start a currently stopped instance<br />
-stop: Stop a currently running instance<br />
-delete: Destroy this instance<br />
-command ~:<br />
-<br />
+Working with: instance_01	Status: SHUTOFF
+Enter 'help' for all available commands.
+command ~: help
+dAnarchy_sys menu commands:
+chooser: Return to instance selection
+create: Create a new instance
+commands: Outputs OpenStack Compute commands
+help: Outputs this info
+
+OpenStack Compute commands (must first choose an instance): 
+status: Current running status of instance
+connect: Connect to instance through SSH
+pause: Pause instance (to RAM)
+unpause: Unpause instance from paused state
+suspend: Suspend Instance (to disk)
+resume: Resume instance from suspended state
+start: Start a currently stopped instance
+stop: Stop a currently running instance
+delete: Destroy this instance
+command ~:
+
 
 ## Contributing
 
