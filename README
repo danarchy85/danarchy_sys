@@ -11,7 +11,7 @@ This will run bundler and install the required gems. It will then prompt for a n
 
 dAnarchySys config setup will be located at danarchy_sys/config/danarchysys.yml in YAML format like this:
 
-:connections:
+:connections:  
   :your_connection:  
     :openstack_auth_url: http://openstack-provider.com:5000/v2.0/tokens  
     :openstack_username: openstack_username  
