@@ -2,12 +2,19 @@
 module DanarchySys
   module OpenStack
     class Compute
-      def initialize
-        @os_connection_params = Connection.os_dreamcompute
-        @compute = Fog::Compute::OpenStack.new(@os_connection_params)
+      def initialize(provider)
+        config = ConfigMgr.new
+        danarchysys_config = config.load
+        connection = danarchysys_config[:connections][provider]
+        @settings = danarchysys_config[:settings]
+        @compute = Fog::Compute::OpenStack.new(connection)
       end
 
       def all_instances
+        ComputeInstances.all_instances(@compute)
+      end
+      
+      def list_instances
         ComputeInstances.list_all_instances(@compute)
       end
 
@@ -15,8 +22,8 @@ module DanarchySys
         ComputeInstances.list_active_instances(@compute)
       end
 
-      def create_prompt
-        ComputePrompts.create_instance(@compute)
+      def create_instance_prompt(instance_name)
+        ComputePrompts.create_instance(@settings, @compute, instance_name)
       end
 
       def get_instance(instance_name)
@@ -77,7 +84,7 @@ module DanarchySys
         instance = get_instance(instance_name)
 
         keypair_name = instance.key_name
-        ComputeKeyPairs.pemfile_path(keypair_name)
+        ComputeKeyPairs.pemfile_path(@settings, keypair_name)
       end
 
       def user(instance_name)
@@ -86,6 +93,7 @@ module DanarchySys
         image_id = image_info['id']
         image = ComputeImages.get_image_by_id(@compute, image_id)
 
+        # CoreOS is an exception with user as simply 'core' and not 'coreos'
         return 'core' if image.name =~ /CoreOS/i
         return image.name.downcase.split('-')[0]
       end

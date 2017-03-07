@@ -6,3 +6,13 @@ set -vx
 bundle install
 
 # Do any other automated setup that you need to do here
+PATH=$(pwd)
+
+if [[ $PATH =~ danarchy_sys/bin$ ]]; then
+    /usr/bin/ruby $PATH/setup.rb
+elif [[ $PATH =~ danarchy_sys$ ]]; then
+    /usr/bin/ruby $PATH/bin/setup.rb
+else
+    echo "Unable to find danarchy_sys/bin/setup.rb!"
+    echo "Please run it manually: /usr/bin/ruby danarchy_sys/bin/setup.rb"
+fi

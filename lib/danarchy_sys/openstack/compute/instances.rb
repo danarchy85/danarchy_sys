@@ -91,6 +91,8 @@ class ComputeInstances
                                       key_name: keypair_name)
     # add security_group
 
+    # Put error handling from instance_prompts here
+    
     instance.wait_for { ready? }
     instance
   end
@@ -98,6 +100,16 @@ class ComputeInstances
   def self.delete_instance(compute, instance_name)
     # check for and delete instance
     instance = get_instance(compute, instance_name)
-    compute.delete_server(instance.id) unless instance == 'nil'
+    return 1 if instance == false
+    compute.delete_server(instance.id)
+
+    attempt = 1
+    until check_instance(compute, instance_name) == false
+      return false if attempt == 5
+      sleep(5)
+      attempt += 1
+    end
+
+    return true
   end
 end
