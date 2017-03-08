@@ -9,7 +9,6 @@ module DanarchySys
       class Compute
         def initialize
           require_relative 'cli/console_help'
-          require_relative 'cli/general'
           require_relative 'cli/providers'
           require_relative 'cli/instance'
           
