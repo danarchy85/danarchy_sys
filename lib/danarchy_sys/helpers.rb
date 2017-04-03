@@ -13,23 +13,36 @@ class Helpers
     numbered_hash
   end
 
+  def self.hash_to_numhash(hash)
+    numbered_hash = {}
+
+    hash.map.with_index do | (k, v), index |
+      index += 1
+      numbered_hash[index] = {k => v}
+    end
+
+    numbered_hash
+  end
+
   def self.objects_to_numhash(objects)
     numbered_object_hash = {}
 
-    count = 1
-    objects.each do |obj|
-      numbered_object_hash[count.to_s] = obj.all_attributes
-      count += 1
+    objects.map.with_index do | obj, index |
+      index += 1
+      numbered_object_hash[index] = obj.all_attributes
     end
 
     numbered_object_hash
   end
 
-  def self.hash_largest_value(hash)
-    hash.values.max_by(&:length).length
+  def self.hash_largest_key(hash)
+    hash.keys.map(&:to_s).max_by(&:length)
   end
 
-  # Search for a given value within a given key within a given nested hash
+  def self.hash_largest_value(hash)
+    hash.values.max_by(&:length)
+  end
+
   def self.check_nested_hash_value(hash, key, value)
     check = false
 

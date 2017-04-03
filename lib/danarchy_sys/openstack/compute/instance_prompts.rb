@@ -7,7 +7,7 @@ class ComputePrompts
 
     # List available images in a numbered hash.
     puts "\nAvailable Images:"
-    i_name_length = Helpers.hash_largest_value(images_numbered)
+    i_name_length = Helpers.hash_largest_value(images_numbered).length
     printf("%0s %-#{i_name_length}s\n", 'Id', 'Image')
     images_numbered.each do |id, i_name|
       printf("%0s %-#{i_name_length}s\n", "#{id}.", i_name)
@@ -36,10 +36,9 @@ class ComputePrompts
   end
 
   def self.flavor(compute)
-    flavors = Helpers.objects_to_numhash(ComputeFlavors.all_flavors(compute).to_a.sort_by(&:ram))
+    flavors = Helpers.objects_to_numhash(ComputeFlavors.all_flavors(compute).sort_by(&:ram))
     flavor_name = 'nil'
 
-    # List available instance flavors ordered by RAM
     puts "\nAvailable Instance Flavors:"
     puts sprintf("%0s %-15s %-10s %-10s %0s", 'Id', 'Name', 'RAM', 'VCPUs', 'Disk')
     flavors.each do |id, flavor|
@@ -47,20 +46,19 @@ class ComputePrompts
                     "#{id}.", flavor[:name].split('.')[1], flavor[:ram], flavor[:vcpus], flavor[:disk])
     end
 
-    # Loop input until existing flavor is selected
     print 'Which flavor should we use for this instance?: '
-    flavor_check = 'nil'
+    flavor_check = false
 
     until flavor_check == true
       flavor_name = gets.chomp
 
       if flavor_name =~ /^[0-9]*$/
-        until flavors.keys.include?(flavor_name)
+        until flavors.keys.include?(flavor_name.to_i)
           print "#{flavor_name} is not a valid Id. Enter an Id from above: "
           flavor_name = gets.chomp
         end
 
-        flavor_name = flavors[flavor_name.to_s][:name].split('.')[1]
+        flavor_name = flavors[flavor_name.to_i][:name].split('.')[1]
       end
       
       flavors.each_value do |flavor|
@@ -87,21 +85,21 @@ class ComputePrompts
 
     # Loop input until existing flavor is selected or create a new one
     print 'Enter a keypair to use for this instance or enter a name for a new keypair : '
-    keypair_check = 'nil'
+    keypair_check = false
 
     until keypair_check == true
       keypair_name = gets.chomp
 
       # Accept keypair Id as an entry
       if keypair_name =~ /^[0-9]*$/
-        until keypairs.keys.include?(keypair_name)
+        until keypairs.keys.include?(keypair_name.to_i)
           print "#{keypair_name} is not a valid Id.
 Enter an Id from above, or \'return\' to restart keypair selection. : "
           keypair_name = gets.chomp
           return keypair(settings, compute) if keypair_name == 'return'
         end
 
-        keypair_name = keypairs[keypair_name.to_s][:name]
+        keypair_name = keypairs[keypair_name.to_i][:name]
       end
 
       keypair_check = Helpers.check_nested_hash_value(keypairs, :name, keypair_name)

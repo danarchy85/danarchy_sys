@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+require_relative '../lib/danarchy_sys'
 require_relative '../lib/danarchy_sys/cli'
+require 'irb'
 
-DanarchySys::CLI.new
+IRB.start

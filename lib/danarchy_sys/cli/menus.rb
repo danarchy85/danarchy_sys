@@ -1,0 +1,61 @@
+
+class Menus
+  def self.get_menu(menu)
+    menus = { 'main' => { 'instance'    => 'Instance Manager',
+                          'keypair'     => 'Keypair Manager (Not yet implemented!)',
+                          'help'        => 'Outputs commands for current the menu level',
+                          'exit'        => 'Exit dAnarchy_sys'},
+              'instance' => { 'status'  => 'Current running status of instance',
+                              'connect' => 'Connect to instance through SSH',
+                              'start'   => 'Start a currently stopped instance',
+                              'stop'    => 'Stop a currently running instance',
+                              'pause'   => 'Pause instance (to RAM)',
+                              'unpause' => 'Unpause instance from paused state',
+                              'suspend' => 'Suspend Instance (to disk)',
+                              'resume'  => 'Resume instance from suspended state',
+                              'create'  => 'Create a new instance',
+                              'delete'  => 'Delete this instance'}
+            }
+
+    menus[menu]
+  end
+
+  def self.numbered_menu(menu)
+    numbered_menu = Helpers.hash_to_numhash(get_menu(menu))
+  end
+
+  def self.print_menu(menu)
+    if menu == 'main'
+      puts 'dAnarchy_sys main menu commands:'
+      puts 'Enter \'help\' to view available commands or \'exit\' to leave.'
+      # print_menu(menu)
+    elsif menu == 'instance'
+      puts 'Instance Manager commands: '
+      puts 'Enter \'help\' to view available commands or \'back\' for the main menu.'
+      # print_menu(menu)
+    elsif menu == 'keypair'
+      puts 'Keypair Manager commands: '
+      puts 'Not yet implemented!'
+      return
+      # print_menu(menu)
+    elsif menu == 'storage'
+      puts 'Storage Manager commands: '
+      puts 'Not yet implemented!'
+      return
+      # print_menu(menu)
+    end
+
+    # numbered_menu = Helpers.hash_to_numhash(menu)
+    numbered_menu = numbered_menu(menu)
+    menu = get_menu(menu)
+    
+    id_length = Helpers.hash_largest_key(numbered_menu).length + 1
+    item_length = Helpers.hash_largest_key(menu).length
+
+    numbered_menu.each do |id, v|
+      v.each do |name, info|
+        printf("%#{id_length}s %#{item_length}s: %0s\n", "#{id}.", name, info)
+      end
+    end
+  end
+end
