@@ -23,35 +23,48 @@ dAnarchySys config setup will be located at danarchy_sys/config/danarchysys.yml 
 
 ## Usage
 
-ruby danarchy_sys
-OpenStack -> DreamCompute
-Available Instances:
-Id Instance Name
-1. instance_01
-2. instance_02
-3. instance_03
-Which instance should we manage? (leave blank to create a new instance, enter 'exit' to leave): 1
+OpenStack -> os_dreamcompute
+dAnarchy_sys main menu commands:
+Enter 'help' to view available commands or 'exit' to leave.
+1. instance: Instance Manager
+2.  keypair: Keypair Manager (Not yet implemented!)
+3.     help: Outputs commands for current the menu level
+4.     exit: Exit dAnarchy_sys
+command ~: 1
+Instance Manager: enter 'help' to view available commands or 'back' for the main menu.
+Available instances:
+Id Instance Name          Status
+1. danarchy_sys_centos7   SHUTOFF
+2. dh_testing             SHUTOFF
+3. openstack_in_openstack SHUTOFF
+Enter an instance to manage or enter a name for a new instance: 1
+Instance Manager commands: 
+Enter 'help' to view available commands or 'back' for the main menu.
+ 1.  status: Current running status of instance
+ 2. connect: Connect to instance through SSH
+ 3.   start: Start a currently stopped instance
+ 4.    stop: Stop a currently running instance
+ 5.   pause: Pause instance (to RAM)
+ 6. unpause: Unpause instance from paused state
+ 7. suspend: Suspend Instance (to disk)
+ 8.  resume: Resume instance from suspended state
+ 9.  create: Create a new instance
+10.  delete: Delete this instance
+Managing instance: danarchy_sys_centos7	Status: SHUTOFF
+danarchy_sys_centos7 ~: start
+true
+danarchy_sys_centos7 ~: status
+ACTIVE
+danarchy_sys_centos7 ~: connect
+Last login: Fri Apr  7 23:15:42 2017
+[centos@danarchy-sys-centos7 ~]$ uname -s -r
+Linux 3.10.0-514.10.2.el7.x86_64
+[centos@danarchy-sys-centos7 ~]$  exit
+logout
+Connection to 208.113.134.63 closed.
+danarchy_sys_centos7 ~: exit
+Exiting!
 
-Working with: instance_01	Status: SHUTOFF
-Enter 'help' for all available commands.
-command ~: help
-dAnarchy_sys menu commands:
-chooser: Return to instance selection
-create: Create a new instance
-commands: Outputs OpenStack Compute commands
-help: Outputs this info
-
-OpenStack Compute commands (must first choose an instance):
-status: Current running status of instance
-connect: Connect to instance through SSH
-pause: Pause instance (to RAM)
-unpause: Unpause instance from paused state
-suspend: Suspend Instance (to disk)
-resume: Resume instance from suspended state
-start: Start a currently stopped instance
-stop: Stop a currently running instance
-delete: Destroy this instance
-command ~:
 
 
 ## Contributing

@@ -4,8 +4,8 @@ require 'yaml'
 # dAnarchy_sys config management
 class ConfigMgr
   def initialize
-    @danarchysys_home = File.realpath(File.join(File.dirname(__FILE__), '..', '..'))
-    @config_file = File.join(@danarchysys_home, 'config', 'danarchysys.yml')
+    @danarchysys_path = File.realpath(File.join(File.dirname(__FILE__), '..', '..'))
+    @config_file = File.join(@danarchysys_path, 'config', 'danarchysys.yml')
   end
 
   def config_template
