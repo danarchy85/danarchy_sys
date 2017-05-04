@@ -49,12 +49,11 @@ class Menus
     numbered_menu = numbered_menu(menu)
     menu = get_menu(menu)
     
-    id_length = Helpers.hash_largest_key(numbered_menu).length + 1
-    item_length = Helpers.hash_largest_key(menu).length
+    fields = PrintFormats.printf_numhash(numbered_menu)
 
     numbered_menu.each do |id, v|
       v.each do |name, info|
-        printf("%#{id_length}s %#{item_length}s: %0s\n", "#{id}.", name, info)
+        printf("#{fields}\n", "#{id}.", "#{name}:", info)
       end
     end
   end

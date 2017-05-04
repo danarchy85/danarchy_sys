@@ -47,12 +47,13 @@ class ComputeKeyPairs
     keypair = compute.create_key_pair(keypair_name)
     pemfile = pemfile_path(settings, keypair_name)
 
-    # create pemfile at ~/.ssh/fog_keys/openstack/
+    # create pemfile at pemfile_path
     keyhash = keypair.body['keypair']
     private_key = keyhash['private_key']
-    file = File.open(pemfile, 'w') if private_key
-    file.puts(private_key)
-    file.chmod(0o600)
+    File.open(pemfile, 'w') do |f|
+      f.puts(private_key)
+      f.chmod(0600)
+    end
 
     # Verify and return keypair & pemfile
     keypair_check = check_keypair(compute, keypair_name)

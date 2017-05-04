@@ -31,7 +31,6 @@ module DanarchySys
     end
 
     def console
-      # puts 'Enter \'help\' to view commands for current menu.'
       menu = Menus.numbered_menu('main')
       Menus.print_menu('main')
 
@@ -48,6 +47,7 @@ module DanarchySys
           Instance.manager(@os_compute)
         elsif cmd == 'keypair'
           puts 'Keypair Manager not yet implemented!'
+          # Keypair.manager(@os_compute)
         elsif cmd == 'help'
           Menus.print_menu('main')
         elsif cmd == 'exit'

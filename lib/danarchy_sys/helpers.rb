@@ -16,8 +16,7 @@ class Helpers
   def self.hash_to_numhash(hash)
     numbered_hash = {}
 
-    hash.map.with_index do | (k, v), index |
-      index += 1
+    hash.map.with_index(1) do | (k, v), index |
       numbered_hash[index] = {k => v}
     end
 
@@ -27,8 +26,7 @@ class Helpers
   def self.objects_to_numhash(objects)
     numbered_object_hash = {}
 
-    objects.map.with_index do | obj, index |
-      index += 1
+    objects.map.with_index(1) do | obj, index |
       numbered_object_hash[index] = obj.all_attributes
     end
 
@@ -36,11 +34,19 @@ class Helpers
   end
 
   def self.hash_largest_key(hash)
-    hash.keys.map(&:to_s).max_by(&:length)
+    hash.keys.map(&:to_s).max_by(&:size)
   end
 
   def self.hash_largest_value(hash)
-    hash.values.max_by(&:length)
+    hash.values.map(&:to_s).max_by(&:size)
+  end
+
+  def self.hash_largest_nested_key(hash)
+    hash.each_value.flat_map(&:keys).max_by(&:size)
+  end
+
+  def self.hash_largest_nested_value(hash)
+    hash.each_value.flat_map(&:values).max_by(&:size)
   end
 
   def self.check_nested_hash_value(hash, key, value)

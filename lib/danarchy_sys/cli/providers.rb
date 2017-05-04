@@ -10,9 +10,12 @@ class Providers
       provider = providers['1']
       return provider
     end      
-    
-    printf("%0s %-5s\n", 'Id', 'Provider')
-    providers.each { |id, provider| printf("%0s. %-5s\n", id, provider) }
+
+    fields = PrintFormats.printf_hash(providers)
+    printf("#{fields}\n", 'Id', 'Provider')
+    providers.each do |id, provider|
+      printf("#{fields}\n", "#{id}.", provider)
+    end
 
     until providers.values.include?(provider)
       print 'Which provider should we use? (enter \'exit\' to leave): '

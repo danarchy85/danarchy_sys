@@ -62,15 +62,15 @@ class Instance
       return instance
     end
 
-    # Display existing instances in numbered hash (scale name col by instance name size)
-    iname_sizes = []
-    instances.each_value { |i| iname_sizes.push(i[:name].length) }
-    puts 'Available instances:'
-    printf("%0s %-#{iname_sizes.max}s %0s\n", 'Id', 'Instance Name', 'Status')
-    instances.each do |id, instance|
-      printf("%0s. %-#{iname_sizes.max}s %0s\n", id, instance[:name], instance[:state])
-    end
+    # Display existing instances in numbered hash
+    fields = PrintFormats.printf_numhash_values(instances, [:name, :state])
 
+    puts 'Available instances:'
+    printf("#{fields}\n", 'Id', 'Instance Name', 'Status')
+    instances.each do |id, instance|
+      printf("#{fields}\n", "#{id}.", instance[:name], instance[:state])
+    end
+    
     # Loop input until an existing instance is selected
     print 'Enter an instance to manage or enter a name for a new instance: '
 
