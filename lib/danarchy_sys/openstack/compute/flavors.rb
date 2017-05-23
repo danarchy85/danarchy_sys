@@ -1,12 +1,16 @@
 
 # OpenStack Flavor Management
 class ComputeFlavors
-  def self.all_flavors(compute)
-    compute.flavors
+  def initialize(compute)
+    @compute = compute
   end
 
-  def self.list_flavors(compute)
-    flavors = all_flavors(compute)
+  def all_flavors
+    @compute.flavors
+  end
+
+  def list_flavors
+    flavors = all_flavors
     flavor_list = []
 
     # Get flavor names into array
@@ -17,13 +21,25 @@ class ComputeFlavors
     flavor_list
   end
 
-  def self.get_flavor(compute, flavor_name)
-    flavors = all_flavors(compute)
+  def get_flavor(flavor_name)
+    flavors = all_flavors
 
     # Get flavor object based on input flavor_name.
     flavor = 'nil'
     flavors.each do |f|
       flavor = f if f.name.end_with?(flavor_name)
+    end
+
+    flavor
+  end
+
+  def get_flavor_by_id(flavor_id)
+    flavors = all_flavors
+
+    # Get flavor based on input flavor_id.
+    flavor = 'nil'
+    flavors.each do |i|
+      flavor = i if i.id == flavor_id
     end
 
     flavor

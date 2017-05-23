@@ -1,8 +1,68 @@
 
-# Prompts used to create a new instance
-class ComputePrompts
-  def self.image(compute)
-    images_numbered = Helpers.array_to_numhash(ComputeImages.list_images(compute))
+# CLI Prompt to create a new instance
+class PromptsCreateInstance
+  def self.create_instance(os_compute, instance_name)
+    comp_inst = os_compute.compute_instances
+    comp_imgs = os_compute.compute_images
+    comp_flvs = os_compute.compute_flavors
+    comp_keys = os_compute.compute_keypairs
+
+    # Prompt for and check that instance_name is unused
+    if instance_name == 'nil'
+      print "\nWhat should we name the instance?: "
+      instance_name = gets.chomp
+    end
+
+    # Make sure instance_name isn't already in use
+    until comp_inst.check_instance(instance_name) == false
+      print "\n#{instance_name} already exists! Try another name: "
+      instance_name = gets.chomp
+    end
+
+    puts "Creating instance: #{instance_name}"
+
+    # Prompt for image
+    puts "\nSelect an image (operating system) for #{instance_name}"
+    image = PromptsCreateInstance.image(comp_imgs)
+
+    # Prompt for flavor
+    puts "\nSelect a flavor (instance size) for #{instance_name}"
+    flavor = PromptsCreateInstance.flavor(comp_flvs)
+
+    # Prompt for keypair
+    puts "\nSelect a keypair (SSH key) for #{instance_name}"
+    keypair = PromptsCreateInstance.keypair(comp_keys)
+
+    # Print summary and prompt to continue
+    puts "\nInstance Name: #{instance_name}"
+    puts "        Linux: #{image.name}"
+    puts "Instance Size: #{flavor.name}"
+    puts "      Keypair: #{keypair.name}"
+
+    print 'Should we continue with creating the instance? (Y/N): '
+    instance = 'nil'
+    continue = gets.chomp
+
+    if continue =~ /^y(es)?$/i
+      puts "Creating instance: #{instance_name}"
+      instance = comp_inst.create_instance(instance_name, image.id, flavor.id, keypair.name)
+    else
+      puts "Abandoning creation of #{instance_name}"
+      return false
+    end
+
+    instance_check = comp_inst.check_instance(instance_name)
+
+    if instance_check == true
+      puts "Instance #{instance.name} is ready!"
+      return instance
+    else
+      raise "Error: Could not create instance: #{instance_name}" if instance_check == false
+    end
+  end
+
+  def self.image(comp_imgs)
+    images_numbered = Helpers.array_to_numhash(comp_imgs.list_images)
     image_name = 'nil'
 
     # List available images in a numbered hash.
@@ -32,11 +92,11 @@ class ComputePrompts
     end
 
     print "Image Name: #{image_name}\n"
-    ComputeImages.get_image_by_name(compute, image_name)
+    comp_imgs.get_image_by_name(image_name)
   end
 
-  def self.flavor(compute)
-    flavors = Helpers.objects_to_numhash(ComputeFlavors.all_flavors(compute).sort_by(&:ram))
+  def self.flavor(comp_flvs)
+    flavors = Helpers.objects_to_numhash(comp_flvs.all_flavors.sort_by(&:ram))
     flavor_name = 'nil'
 
     puts "\nAvailable Instance Flavors:"
@@ -69,11 +129,11 @@ class ComputePrompts
     end
 
     print "Flavor Name: #{flavor_name}\n"
-    ComputeFlavors.get_flavor(compute, flavor_name)
+    comp_flvs.get_flavor(flavor_name)
   end
 
-  def self.keypair(settings, compute)
-    keypairs = Helpers.objects_to_numhash(ComputeKeyPairs.all_keypairs(compute))
+  def self.keypair(comp_keys)
+    keypairs = Helpers.objects_to_numhash(comp_keys.all_keypairs)
     keypair_name = 'nil'
 
     # List available keypairs
@@ -110,68 +170,13 @@ Should we create a new keypair named #{keypair_name}? (Y/N): "
 
         if gets.chomp =~ /^y(es)?$/i
           puts "Creating keypair: #{keypair_name}!"
-          return ComputeKeyPairs.create_keypair(settings, compute, keypair_name)
+          return comp_keys.create_keypair(keypair_name)
         else
           print 'Please enter an option from above: '
         end
       end
     end
 
-    ComputeKeyPairs.get_keypair(compute, keypair_name)
-  end
-
-  def self.create_instance(settings, compute, instance_name)
-    # Prompt for and check that instance_name is unused
-    if instance_name == 'nil'
-      print "\nWhat should we name the instance?: "
-      instance_name = gets.chomp
-    end
-
-    # Make sure instance_name isn't already in use
-    until ComputeInstances.check_instance(compute, instance_name) == false
-      print "\n#{instance_name} already exists! Try another name: "
-      instance_name = gets.chomp
-    end
-
-    puts "Creating instance: #{instance_name}"
-
-    # Prompt for image
-    puts "\nSelect an image (operating system) for #{instance_name}"
-    image = image(compute)
-
-    # Prompt for flavor
-    puts "\nSelect a flavor (instance size) for #{instance_name}"
-    flavor = flavor(compute)
-
-    # Prompt for keypair
-    puts "\nSelect a keypair (SSH key) for #{instance_name}"
-    keypair = keypair(settings, compute)
-
-    # Print summary and prompt to continue
-    puts "\nInstance Name: #{instance_name}"
-    puts "        Linux: #{image.name}"
-    puts "Instance Size: #{flavor.name}"
-    puts "      Keypair: #{keypair.name}"
-
-    print 'Should we continue with creating the instance? (Y/N): '
-    instance = 'nil'
-    continue = gets.chomp
-
-    if continue =~ /^y(es)?$/i
-      puts "Creating instance: #{instance_name}"
-      instance = ComputeInstances.create_instance(compute, instance_name, image.id, flavor.id, keypair.name)
-    else
-      puts "Abandoning creation of #{instance_name}"
-      return false
-    end
-
-    instance_check = ComputeInstances.check_instance(compute, instance_name)
-
-    if instance_check == true
-      puts "Instance #{instance.name} is ready!"
-      return instance
-    else
-      raise "Error: Could not create instance: #{instance_name}" if instance_check == false
-    end
+    comp_keys.get_keypair(keypair_name)
   end
 end

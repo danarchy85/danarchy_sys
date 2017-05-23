@@ -1,7 +1,10 @@
+require_relative 'instance_manager/prompts_create_instance'
+require_relative 'instance_manager/instance_status'
 
-class Instance
+class InstanceManager
   def self.manager(os_compute)
-    puts 'Instance Manager: enter \'help\' to view available commands or \'back\' for the main menu.'
+    comp_inst = os_compute.compute_instances
+    puts 'Instance Manager: enter \'help\' to view available commands or \'main\' for the main menu.'
     menu = Menus.numbered_menu('instance')
     instance = false
 
@@ -22,26 +25,35 @@ class Instance
 
       if cmd == 'help'
         Menus.print_menu('instance')
-      elsif cmd == 'back'
+      elsif cmd == 'main'
         return Menus.print_menu('main')
       elsif cmd == 'chooser'
         instance = chooser(os_compute)
       elsif cmd == 'create'
-        os_compute.create_instance_prompt('nil')
+        PromptsCreateInstance.create_instance(os_compute, 'nil')
         instance = chooser(os_compute)
       elsif cmd == 'delete'
         print "Are you sure you wish to delete instance: #{instance.name}? (this is permanent!) (Y/N): "
-        delete = os_compute.send(cmd.to_s, instance.name.to_s) if gets.chomp =~ /^y(es)?$/i
+        delete = comp_inst.delete_instance(instance.name) if gets.chomp =~ /^y(es)?$/i
         if delete == true
           puts "#{instance.name} has been deleted! Returning to the instance chooser."
           instance = chooser(os_compute)
         else
-          puts "#{instance.name} could not be deleted! Returning to the instance chooser."
-          instance = chooser(os_compute)
+          puts "#{instance.name} was not deleted!"
         end
-      elsif %w(status connect pause unpause suspend resume start stop).include?(cmd.to_s)
-        response = os_compute.send(cmd.to_s, instance.name.to_s)
-        puts response unless cmd == 'connect'
+      elsif cmd == 'status'
+        printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+      elsif %w(connect pause unpause suspend resume start stop).include?(cmd.to_s)
+        if cmd == 'connect'
+          if instance.state == 'ACTIVE'
+            os_compute.compute_ssh(instance.name.to_s)
+          else
+            puts "Unable to connect: #{instance.name} is not running!"
+          end
+        else
+          response = comp_inst.send(cmd.to_s, instance.name.to_s)
+          printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+        end
       else
         Menus.print_menu('instance')
         puts "\nCommand \'#{cmd}\' not available. Enter a command from above."
@@ -50,31 +62,31 @@ class Instance
   end
 
   def self.chooser(os_compute)
-    instances = Helpers.objects_to_numhash(os_compute.all_instances)
+    comp_inst = os_compute.compute_instances
+    instances = comp_inst.all_instances
+    instances_numhash = Helpers.objects_to_numhash(instances)
     instance_name = 'nil'
+    instance = 'nil'
 
     # Create a new instances if none exist
-    if instances.empty?
+    if instances_numhash.empty?
       print 'No existing instances were found. Should we create a new one? (Y/N): '
       abort('Exiting!') unless gets.chomp =~ /^y(es)?$/i
-      instance = os_compute.create_instance_prompt
+      instance = PromptsCreateInstance.create_instance(os_compute, 'nil')
       puts "Working with: #{instance.name}\tStatus: #{instance.state}"
       return instance
     end
 
     # Display existing instances in numbered hash
-    fields = PrintFormats.printf_numhash_values(instances, [:name, :state])
+    fields = PrintFormats.printf_numhash_values(instances_numhash, [:name, :state])
 
     puts 'Available instances:'
-    printf("#{fields}\n", 'Id', 'Instance Name', 'Status')
-    instances.each do |id, instance|
-      printf("#{fields}\n", "#{id}.", instance[:name], instance[:state])
-    end
+    InstanceStatus.all_instances(os_compute, instances)
     
     # Loop input until an existing instance is selected
     print 'Enter an instance to manage or enter a name for a new instance: '
 
-    until Helpers.check_nested_hash_value(instances, :name, instance_name) == true
+    until Helpers.check_nested_hash_value(instances_numhash, :name, instance_name) == true
       instance_name = gets.chomp
 
       until instance_name.empty? == false
@@ -86,20 +98,21 @@ class Instance
 
       # Accept instance Id as an entry
       if instance_name =~ /^[0-9]*$/
-        until instances.keys.include?(instance_name.to_i)
+        until instances_numhash.keys.include?(instance_name.to_i)
           print "#{instance_name} is not a valid Id. Enter an Id from above: "
           instance_name = gets.chomp
         end
 
-        instance_name = instances[instance_name.to_i][:name].to_s
+        instance_name = instances_numhash[instance_name.to_i][:name].to_s
       end
 
-      unless Helpers.check_nested_hash_value(instances, :name, instance_name) == true
+      unless Helpers.check_nested_hash_value(instances_numhash, :name, instance_name) == true
         print "#{instance_name} is not a valid instance.
 Should we create a new instance named #{instance_name}? (Y/N): "
 
         if gets.chomp =~ /^y(es)?$/i
-          return os_compute.create_instance_prompt(instance_name)
+          PromptsCreateInstance.create_instance(os_compute, instance_name)
+          instances_numhash = Helpers.objects_to_numhash(comp_inst.all_instances)
         else
           puts "Not creating new instance: #{instance_name}."
           return false
@@ -107,9 +120,10 @@ Should we create a new instance named #{instance_name}? (Y/N): "
       end
     end
 
-    status = os_compute.status(instance_name)
+    instance = comp_inst.get_instance(instance_name)
+    status = instance.state
     Menus.print_menu('instance')
     puts "Managing instance: #{instance_name}\tStatus: #{status}"
-    os_compute.get_instance(instance_name)
+    instance
   end
 end

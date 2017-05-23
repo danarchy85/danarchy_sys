@@ -1,12 +1,16 @@
 
 # OpenStack Image Management
 class ComputeImages
-  def self.all_images(compute)
-    compute.images
+  def initialize(compute)
+    @compute = compute
+  end
+  
+  def all_images
+    @compute.images
   end
 
-  def self.list_images(compute)
-    images = all_images(compute)
+  def list_images
+    images = all_images
     image_list = []
 
     # Get image names into array
@@ -17,8 +21,8 @@ class ComputeImages
     image_list
   end
 
-  def self.get_image_by_name(compute, image_name)
-    images = all_images(compute)
+  def get_image_by_name(image_name)
+    images = all_images
 
     # Get image based on input image_name.
     image = 'nil'
@@ -29,8 +33,8 @@ class ComputeImages
     image
   end
 
-  def self.get_image_by_id(compute, image_id)
-    images = all_images(compute)
+  def get_image_by_id(image_id)
+    images = all_images
 
     # Get image based on input image_id.
     image = 'nil'

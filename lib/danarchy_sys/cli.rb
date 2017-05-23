@@ -8,7 +8,8 @@ module DanarchySys
     def initialize
       require_relative 'cli/menus'
       require_relative 'cli/providers'
-      require_relative 'cli/instance'
+      require_relative 'cli/instance_manager'
+      # require_relative 'cli/keypair_manager'
 
       provider = Providers.chooser
       puts "OpenStack -> #{provider}"
@@ -17,12 +18,12 @@ module DanarchySys
     end
 
     def instance_chooser
-      inst_mgr = Instance.new(@os_compute)
-      instance = inst_mgr.chooser
+      inst_mgr = InstanceManager.new(@os_compute)
+      instance = inst_mgr.chooser(@os_compute)
 
       until instance != false
         puts "\nReturning to Instance Chooser"
-        instance = inst_mgr.chooser
+        instance = inst_mgr.chooser(@os_compute)
       end
 
       menus('main')
@@ -44,7 +45,7 @@ module DanarchySys
         end
 
         if cmd == 'instance'
-          Instance.manager(@os_compute)
+          InstanceManager.manager(@os_compute)
         elsif cmd == 'keypair'
           puts 'Keypair Manager not yet implemented!'
           # Keypair.manager(@os_compute)

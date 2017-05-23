@@ -1,23 +1,22 @@
 
 # OpenStack Instance Management
 class ComputeInstances
-  def self.all_instances(compute)
-    compute.servers
+  def initialize(compute, settings)
+    @compute = compute
+    @settings = settings
+  end
+  
+  def all_instances
+    @compute.servers
   end
 
-  def self.list_all_instances(compute)
-    instances = all_instances(compute)
-    instance_list = []
-
-    instances.each do |i|
-      instance_list.push(i.name)
-    end
-
-    instance_list
+  def list_all_instances
+    instances = all_instances
+    instances.map(&:name)
   end
 
-  def self.list_active_instances(compute)
-    instances = all_instances(compute)
+  def list_active_instances
+    instances = all_instances
     instance_list = []
 
     instances.each do |i|
@@ -27,15 +26,15 @@ class ComputeInstances
     instance_list
   end
 
-  def self.check_instance(compute, instance_name)
-    instances = list_all_instances(compute)
+  def check_instance(instance_name)
+    instances = list_all_instances
 
     return true if instances.include?(instance_name)
     false
   end
 
-  def self.get_instance(compute, instance_name)
-    servers = all_instances(compute)
+  def get_instance(instance_name)
+    servers = all_instances
 
     # Get servers ID based on input instance_name
     instance = 'nil'
@@ -47,45 +46,51 @@ class ComputeInstances
     instance
   end
 
-  def self.get_addresses(compute, instance_name)
-    instance = get_instance(compute, instance_name)
+  def get_addresses(instance_name)
+    instance = get_instance(instance_name)
 
     addresses = instance.addresses['public']
     ipv6, ipv4 = addresses[0], addresses[1]
   end
 
-  def self.pause_instance(compute, instance_name)
-    instance = get_instance(compute, instance_name)
-    compute.pause_server(instance.id)
+  def pause(instance_name)
+    instance = get_instance(instance_name)
+    return false unless instance.state == 'ACTIVE'
+    @compute.pause_server(instance.id)
   end
 
-  def self.unpause_instance(compute, instance_name)
-    instance = get_instance(compute, instance_name)
-    compute.unpause_server(instance.id)
+  def unpause(instance_name)
+    instance = get_instance(instance_name)
+    return false unless instance.state == 'PAUSED'
+    @compute.unpause_server(instance.id)
   end
 
-  def self.suspend_instance(compute, instance_name)
-    instance = get_instance(compute, instance_name)
-    compute.suspend_server(instance.id)
+  def suspend(instance_name)
+    instance = get_instance(instance_name)
+    return false unless instance.state == 'ACTIVE'
+    @compute.suspend_server(instance.id)
   end
 
-  def self.resume_instance(compute, instance_name)
-    instance = get_instance(compute, instance_name)
-    compute.resume_server(instance.id)
+  def resume(instance_name)
+    instance = get_instance(instance_name)
+    return false unless instance.state == 'SUSPENDED'
+    @compute.resume_server(instance.id)
   end
 
-  def self.start_instance(compute, instance_name)
-    instance = get_instance(compute, instance_name)
-    compute.start_server(instance.id)
+  def start(instance_name)
+    instance = get_instance(instance_name)
+    return false unless instance.state == 'SHUTOFF'
+    @compute.start_server(instance.id)
   end
 
-  def self.stop_instance(compute, instance_name)
-    instance = get_instance(compute, instance_name)
-    compute.stop_server(instance.id)
+  def stop(instance_name)
+    instance = get_instance(instance_name)
+    return false unless instance.state == 'ACTIVE'
+    @compute.stop_server(instance.id)
   end
 
-  def self.create_instance(compute, instance_name, image_id, flavor_id, keypair_name)
-    instance = compute.servers.create(name: instance_name,
+  def create_instance(instance_name, image_id, flavor_id, keypair_name)
+    instance = @compute.servers.create(name: instance_name,
                                       image_ref: image_id,
                                       flavor_ref: flavor_id,
                                       key_name: keypair_name)
@@ -97,14 +102,14 @@ class ComputeInstances
     instance
   end
 
-  def self.delete_instance(compute, instance_name)
+  def delete_instance(instance_name)
     # check for and delete instance
-    instance = get_instance(compute, instance_name)
+    instance = get_instance(instance_name)
     return 1 if instance == false
-    compute.delete_server(instance.id)
+    @compute.delete_server(instance.id)
 
     attempt = 1
-    until check_instance(compute, instance_name) == false
+    until check_instance(instance_name) == false
       return false if attempt == 5
       sleep(5)
       attempt += 1
