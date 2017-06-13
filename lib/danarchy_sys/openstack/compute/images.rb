@@ -15,6 +15,7 @@ class ComputeImages
 
     # Get image names into array
     images.each do |i|
+      next unless i.status == 'ACTIVE'
       image_list.push(i.name)
     end
 
