@@ -38,7 +38,7 @@ class ComputeImages
 
   def get_image_by_id(image_id)
     images = all_images
-p image_id
+
     # Get image based on input image_id.
     image = 'nil'
     images.each do |i|
