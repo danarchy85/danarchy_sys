@@ -15,6 +15,7 @@ class ComputeImages
 
     # Get image names into array
     images.each do |i|
+      next unless i.status == 'ACTIVE'
       image_list.push(i.name)
     end
 
@@ -27,7 +28,9 @@ class ComputeImages
     # Get image based on input image_name.
     image = 'nil'
     images.each do |i|
-      image = i if i.name == image_name
+      next unless i.name == image_name
+      next unless i.status == 'ACTIVE'
+      image = i
     end
 
     image
@@ -35,11 +38,13 @@ class ComputeImages
 
   def get_image_by_id(image_id)
     images = all_images
-
+p image_id
     # Get image based on input image_id.
     image = 'nil'
     images.each do |i|
-      image = i if i.id == image_id
+      next unless i.id == image_id
+      next unless i.status == 'ACTIVE'
+      image = i
     end
 
     image
