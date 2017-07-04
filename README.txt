@@ -4,12 +4,28 @@ Welcome to dAnarchy Systems! This gem will assist you in easing the setup of Ope
 
 ## Installation
 
-Requires bundler to be installed already: 'gem install bundler'
+# Pull the gem from RubyGems.org
+gem install danarchy_sys
 
-Download danarchy_sys, 'cd' into its directory, then run 'sh bin/setup'.
-This will run bundler and install the required gems. It will then prompt for a new OpenStack setup.
+# Setup is still not fully flushed out, so run setup.rb to create a configuration file with OpenStack credentials. An update to this process is planned for v.0.3:
+ ~ $ setup.rb
+Beginning danarchysys configuration setup.
+Creating a new configuration.
+Provider name: openstack
+OpenStack Auth URL      (Example: http://openstack-host.com:5000/v2.0/tokens)
+Enter URL: http://your_openstack_host.com:5000/v2.0/tokens
+OpenStack Username: your_openstack_username
+OpenStack API Key: your_openstack_api_key
+OpenStack Tenant ID: your_openstack_tenant_id
+Should we add another connection? (Y/N): n
+Available OpenStack Connections:
+openstack
+SSH key location: /home/danarchy/.gem/ruby/2.2.0/gems/danarchy_sys-0.2.11/config/ssh
+Config saved to: /home/danarchy/.gem/ruby/2.2.0/gems/danarchy_sys-0.2.11/config/danarchysys.yml
+dAnarchySys setup is finished. Run '/usr/bin/ruby danarchy_sys/bin/danarchy_sys' to begin!
 
-dAnarchySys config setup will be located at danarchy_sys/config/danarchysys.yml in YAML format like this:
+
+dAnarchySys config file follows a YAML format like this:
 
 :connections:
   :your_connection:
@@ -21,8 +37,11 @@ dAnarchySys config setup will be located at danarchy_sys/config/danarchysys.yml 
   :ssh_key_path: PATH_TO_SSH_KEYS
 
 
+You can then run 'danarchy_sys' to connect to your OpenStack host and get started:
+
 ## Usage
 
+ ~ $ danarchy_sys
 Id Provider
 1. os_dreamcompute
 Which provider should we use? (enter 'exit' to leave): 1
