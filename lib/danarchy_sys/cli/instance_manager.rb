@@ -52,6 +52,7 @@ class InstanceManager
           end
         else
           response = comp_inst.send(cmd.to_s, instance.name.to_s)
+          # Need to recheck/wait for status update
           printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
         end
       else
