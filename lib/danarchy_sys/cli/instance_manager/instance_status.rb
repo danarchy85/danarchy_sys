@@ -9,7 +9,7 @@ class InstanceStatus
       id += 1
     end
 
-    fields = %w[name state image ram disk keypair]
+    fields = %w[name state image vcpus ram disk keypair]
     format = PrintFormats.printf_numhash_values(istats, fields)
     _header(format)
     
@@ -18,6 +18,7 @@ class InstanceStatus
              i['name'],
              i['state'],
              i['image'],
+             i['vcpus'],
              i['ram'],
              i['disk'],
              i['keypair'],
@@ -36,6 +37,7 @@ class InstanceStatus
     istats = { 'name'  => instance.name,
                'state' => instance.state,
                'image' => image.name,
+               'vcpus' => flavor.vcpus,
                'ram'   => flavor.ram,
                'disk'  => flavor.disk,
                'keypair' => instance.key_name,
@@ -43,6 +45,6 @@ class InstanceStatus
   end
 
   def self._header(format)
-    printf("#{format}\n", 'Id', 'Name', 'State', 'Image', 'RAM', 'Disk', 'KeyPair')
+    printf("#{format}\n", 'Id', 'Name', 'State', 'Image', 'VCPUS', 'RAM', 'Disk', 'KeyPair')
   end
 end
