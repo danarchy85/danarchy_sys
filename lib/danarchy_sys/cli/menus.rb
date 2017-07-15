@@ -31,7 +31,7 @@ class Menus
       # print_menu(menu)
     elsif menu == 'instance'
       puts 'Instance Manager commands: '
-      puts 'Enter \'help\' to view available commands or \'back\' for the main menu.'
+      puts 'Enter \'help\' to view available commands or \'main\' for the main menu.'
       # print_menu(menu)
     elsif menu == 'keypair'
       puts 'Keypair Manager commands: '

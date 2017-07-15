@@ -3,7 +3,7 @@ require 'fog/openstack'
 require_relative '../../../../danarchy_sys'
 
 provider = 'os_dreamcompute'.to_sym
-config = ConfigMgr.new
+config = ConfigManager.new
 danarchysys_config = config.load
 
 connection = danarchysys_config[:connections][provider]

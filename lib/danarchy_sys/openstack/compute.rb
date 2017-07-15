@@ -7,10 +7,9 @@ module DanarchySys
   module OpenStack
     class Compute
       def initialize(provider)
-        config = ConfigMgr.new
-        danarchysys_config = config.load
-        connection = danarchysys_config[:connections][provider]
-        @settings = danarchysys_config[:settings]
+        danarchysys_config = DanarchySys::ConfigManager::Config.new
+        connection = danarchysys_config[:connections][provider.to_sym]
+        @settings = danarchysys_config[:global_settings]
         @compute = Fog::Compute::OpenStack.new(connection)
       end
 
@@ -49,7 +48,7 @@ module DanarchySys
           user = image.name.downcase.split('-')[0]
         end
 
-        ipv4 = comp_inst.get_addresses(instance_name)[1]['addr']
+        ipv4, ipv6 = comp_inst.get_addresses(instance_name)
 
         ssh = "ssh #{user}@#{ipv4} -i '#{pemfile}'"
         system(ssh)

@@ -48,9 +48,15 @@ class ComputeInstances
 
   def get_addresses(instance_name)
     instance = get_instance(instance_name)
+   (ipv6, ipv4) = nil, nil
+   addresses = instance.addresses['public']
 
-    addresses = instance.addresses['public']
-    ipv6, ipv4 = addresses[0], addresses[1]
+    addresses.each do |i|
+      ipv4 = i['addr'] if i['addr'].include?('.')
+      ipv6 = i['addr'] if i['addr'].include?(':')
+    end
+
+    return ipv4, ipv6
   end
 
   def pause(instance_name)

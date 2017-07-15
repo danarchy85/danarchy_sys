@@ -1,8 +1,7 @@
 
 class Providers
   def self.chooser
-    config = ConfigMgr.new
-    danarchysys_config = config.load
+    danarchysys_config = DanarchySys::ConfigManager::Config.new
     providers = Helpers.array_to_numhash(danarchysys_config[:connections].keys)
     provider = 'nil'
 

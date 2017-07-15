@@ -1,3 +1,9 @@
+*~
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
 /.bundle/
 /.yardoc
 /Gemfile.lock

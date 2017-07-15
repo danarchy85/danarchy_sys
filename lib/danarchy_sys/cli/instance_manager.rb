@@ -4,7 +4,7 @@ require_relative 'instance_manager/instance_status'
 class InstanceManager
   def self.manager(os_compute)
     comp_inst = os_compute.compute_instances
-    puts 'Instance Manager: enter \'help\' to view available commands or \'main\' for the main menu.'
+    puts 'Instance Manager: enter \'chooser\' to select an instance, \'help\' to view available commands or \'main\' for the main menu.'
     menu = Menus.numbered_menu('instance')
     instance = false
 
@@ -43,17 +43,33 @@ class InstanceManager
         end
       elsif cmd == 'status'
         printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
-      elsif %w(connect pause unpause suspend resume start stop).include?(cmd.to_s)
-        if cmd == 'connect'
-          if instance.state == 'ACTIVE'
-            os_compute.compute_ssh(instance.name.to_s)
-          else
-            puts "Unable to connect: #{instance.name} is not running!"
-          end
+      elsif %w(pause unpause suspend resume start stop).include?(cmd.to_s)
+        status = instance.state
+
+        if cmd =~ /e$/
+          print "#{cmd.gsub(/e$/, 'ing')} #{instance.name} ."
         else
-          response = comp_inst.send(cmd.to_s, instance.name.to_s)
-          # Need to recheck/wait for status update
-          printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+          print "#{cmd}ing #{instance.name} ."
+        end
+
+        response = comp_inst.send(cmd.to_s, instance.name.to_s)
+        if response == false
+          puts "\nInvalid action for #{instance.name}'s current status!"
+          next
+        end
+        
+        until status != instance.state
+          instance = os_compute.compute_instances.get_instance(instance.name)
+          sleep(3)
+          print ' .'
+        end
+
+        printf("\n%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+      elsif cmd == 'connect'
+        if instance.state == 'ACTIVE'
+          os_compute.compute_ssh(instance.name.to_s)
+        else
+          puts "Unable to connect: #{instance.name} is not running!"
         end
       else
         Menus.print_menu('instance')

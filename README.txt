@@ -7,22 +7,16 @@ Welcome to dAnarchy Systems! This gem will assist you in easing the setup of Ope
 # Pull the gem from RubyGems.org
 gem install danarchy_sys
 
-# Setup is still not fully flushed out, so run setup.rb to create a configuration file with OpenStack credentials. An update to this process is planned for v.0.3:
- ~ $ setup.rb
-Beginning danarchysys configuration setup.
-Creating a new configuration.
-Provider name: openstack
+# Run 'danarchy_sys' and a first-time setup will prompt you for your connection settings.
+ ~ $ danarchy_sys
+No existing configuration found!
+Creating a new OpenStack connection!
 OpenStack Auth URL      (Example: http://openstack-host.com:5000/v2.0/tokens)
 Enter URL: http://your_openstack_host.com:5000/v2.0/tokens
 OpenStack Username: your_openstack_username
 OpenStack API Key: your_openstack_api_key
 OpenStack Tenant ID: your_openstack_tenant_id
-Should we add another connection? (Y/N): n
-Available OpenStack Connections:
-openstack
-SSH key location: /home/danarchy/.gem/ruby/2.2.0/gems/danarchy_sys-0.2.11/config/ssh
-Config saved to: /home/danarchy/.gem/ruby/2.2.0/gems/danarchy_sys-0.2.11/config/danarchysys.yml
-dAnarchySys setup is finished. Run '/usr/bin/ruby danarchy_sys/bin/danarchy_sys' to begin!
+Configuration has been saved!
 
 
 dAnarchySys config file follows a YAML format like this:
@@ -33,18 +27,14 @@ dAnarchySys config file follows a YAML format like this:
     :openstack_username: openstack_username
     :openstack_api_key: openstack_api_key
     :openstack_tenant: openstack_tenant
-:settings:
-  :ssh_key_path: PATH_TO_SSH_KEYS
+:general_settings:
+  :ssh_key_path: PATH_TO_SSH_KEYS (this is filled in by default)
 
-
-You can then run 'danarchy_sys' to connect to your OpenStack host and get started:
+# Once configuration finishes you will enter the main CLI for dAnarchy_sys.
 
 ## Usage
 
  ~ $ danarchy_sys
-Id Provider
-1. os_dreamcompute
-Which provider should we use? (enter 'exit' to leave): 1
 OpenStack -> os_dreamcompute
 dAnarchy_sys main menu commands:
 Enter 'help' to view available commands or 'exit' to leave.

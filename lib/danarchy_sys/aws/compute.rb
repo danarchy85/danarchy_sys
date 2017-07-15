@@ -2,7 +2,7 @@ module DanarchySys
   module AWS
     class Compute
       def initialize(provider)
-        config = ConfigMgr.new
+        config = ConfigManager.new
         danarchysys_config = config.load
         connection = danarchysys_config[:connections][provider]
         @settings = danarchysys_config[:settings]
