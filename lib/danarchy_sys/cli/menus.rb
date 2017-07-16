@@ -2,9 +2,10 @@
 class Menus
   def self.get_menu(menu)
     menus = { 'main' => { 'instance'    => 'Instance Manager',
-                          'keypair'     => 'Keypair Manager (Not yet implemented!)',
+                          'keypair'     => 'Keypair Manager',
                           'help'        => 'Outputs commands for current the menu level',
-                          'exit'        => 'Exit dAnarchy_sys'},
+                          'exit'        => 'Exit dAnarchy_sys'
+                        },
               'instance' => { 'status'  => 'Current running status of instance',
                               'connect' => 'Connect to instance through SSH',
                               'start'   => 'Start a currently stopped instance',
@@ -14,7 +15,11 @@ class Menus
                               'suspend' => 'Suspend Instance (to disk)',
                               'resume'  => 'Resume instance from suspended state',
                               'create'  => 'Create a new instance',
-                              'delete'  => 'Delete this instance'}
+                              'delete'  => 'Delete this instance'
+                            },
+              'keypair' => { 'create' => 'Create a new keypair',
+                             'delete' => 'Delete an existing keypair'
+                           }
             }
 
     menus[menu]
@@ -31,13 +36,12 @@ class Menus
       # print_menu(menu)
     elsif menu == 'instance'
       puts 'Instance Manager commands: '
-      puts 'Enter \'help\' to view available commands or \'main\' for the main menu.'
+      puts 'Enter enter \'chooser\' to select an instance, \'help\' to view available commands or \'main\' for the main menu.'
       # print_menu(menu)
     elsif menu == 'keypair'
       puts 'Keypair Manager commands: '
-      puts 'Not yet implemented!'
-      return
-      # print_menu(menu)
+      puts 'Enter enter \'chooser\' to select a keypair, \'help\' to view available commands or \'main\' for the main menu.'
+    # print_menu(menu)
     elsif menu == 'storage'
       puts 'Storage Manager commands: '
       puts 'Not yet implemented!'

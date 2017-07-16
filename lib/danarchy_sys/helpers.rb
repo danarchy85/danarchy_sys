@@ -6,7 +6,7 @@ class Helpers
     
     count = 1
     array.sort.each do |item|
-      numbered_hash[count.to_s] = item
+      numbered_hash[count] = item
       count += 1
     end
 

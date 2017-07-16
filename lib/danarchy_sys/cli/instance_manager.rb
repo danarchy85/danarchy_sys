@@ -4,13 +4,14 @@ require_relative 'instance_manager/instance_status'
 class InstanceManager
   def self.manager(os_compute)
     comp_inst = os_compute.compute_instances
-    puts 'Instance Manager: enter \'chooser\' to select an instance, \'help\' to view available commands or \'main\' for the main menu.'
+    puts 'Instance Manager: enter \'help\' to view available commands or \'main\' for the main menu.'
     menu = Menus.numbered_menu('instance')
     instance = false
 
     loop do
       while instance == false
         instance = chooser(os_compute)
+        return Menus.print_menu('main') if instance == 'main'
       end
 
       print "#{instance.name} ~: "
@@ -75,6 +76,8 @@ class InstanceManager
         Menus.print_menu('instance')
         puts "\nCommand \'#{cmd}\' not available. Enter a command from above."
       end
+
+      return Menus.print_menu('main') if instance == 'main'
     end
   end
 
@@ -112,6 +115,7 @@ class InstanceManager
       end
 
       abort('Exiting') if instance_name == 'exit'
+      return 'main' if instance_name == 'main'
 
       # Accept instance Id as an entry
       if instance_name =~ /^[0-9]*$/
