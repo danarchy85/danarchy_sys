@@ -22,8 +22,10 @@ class Providers
 
       abort('Exiting') if provider == 'exit'
 
-      if provider =~ /^[0-9]*$/ # select by Id
-        provider = providers[provider.to_s]
+      if provider =~ /^[0-9]*$/
+        provider = providers[provider.to_i]
+      else
+        provider = provider.to_sym
       end
     end
 
