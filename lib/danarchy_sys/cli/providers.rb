@@ -6,7 +6,7 @@ class Providers
     provider = 'nil'
 
     if providers.count == 1
-      provider = providers['1']
+      provider = providers[1]
       return provider
     end      
 
