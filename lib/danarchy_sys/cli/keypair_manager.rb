@@ -1,4 +1,5 @@
 require_relative './menus'
+require_relative './keypair_manager/keypair_status'
 
 class KeypairManager
   def self.manager(os_compute)
@@ -11,8 +12,13 @@ class KeypairManager
       while keypair == false
         keypair = chooser(os_compute)
         return Menus.print_menu('main') if keypair == 'main'
-      end
 
+        if keypair == 'keypair'
+          Menus.print_menu('keypair')
+          keypair = false
+        end
+      end
+      
       print "#{keypair.name} ~: " if keypair
       cmd = gets.chomp
 
@@ -27,6 +33,8 @@ class KeypairManager
         Menus.print_menu('keypair')
       elsif cmd == 'main'
         return Menus.print_menu('main')
+      elsif cmd == 'info'
+        KeypairStatus.single_keypair(keypair)
       elsif cmd == 'chooser'
         keypair = chooser(os_compute)
       elsif cmd == 'create'
@@ -44,36 +52,6 @@ class KeypairManager
           keypair = chooser(os_compute)
         else
           puts "#{keypair.name} was not deleted!"
-        end
-      elsif cmd == 'status'
-        printf("%#{keypair.name.size}s %0s %0s\n", keypair.name, ' => ', keypair.state)
-      elsif %w(pause unpause suspend resume start stop).include?(cmd.to_s)
-        status = keypair.state
-
-        if cmd =~ /e$/
-          print "#{cmd.gsub(/e$/, 'ing')} #{keypair.name} ."
-        else
-          print "#{cmd}ing #{keypair.name} ."
-        end
-
-        response = comp_kp.send(cmd.to_s, keypair.name.to_s)
-        if response == false
-          puts "\nInvalid action for #{keypair.name}'s current status!"
-          next
-        end
-        
-        until status != keypair.state
-          keypair = os_compute.compute_keypairs.get_keypair(keypair.name)
-          sleep(3)
-          print ' .'
-        end
-
-        printf("\n%#{keypair.name.size}s %0s %0s\n", keypair.name, ' => ', keypair.state)
-      elsif cmd == 'connect'
-        if keypair.state == 'ACTIVE'
-          os_compute.compute_ssh(keypair.name.to_s)
-        else
-          puts "Unable to connect: #{keypair.name} is not running!"
         end
       else
         Menus.print_menu('keypair')
@@ -119,6 +97,7 @@ class KeypairManager
 
       abort('Exiting') if keypair_name == 'exit'
       return 'main' if keypair_name == 'main'
+      return 'keypair' if keypair_name == 'help'
 
       # Accept keypair Id as an entry
       if keypair_name =~ /^[0-9]*$/
@@ -135,7 +114,8 @@ class KeypairManager
 Should we create a new keypair named #{keypair_name}? (Y/N): "
 
         if gets.chomp =~ /^y(es)?$/i
-          comp_kp.create_keypair(keypair_name)
+          keypair = comp_kp.create_keypair(keypair_name)
+          KeypairStatus.single_keypair(keypair)
         else
           puts "Not creating new keypair: #{keypair_name}."
           return false

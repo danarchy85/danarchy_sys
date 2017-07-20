@@ -17,7 +17,8 @@ class Menus
                               'create'  => 'Create a new instance',
                               'delete'  => 'Delete this instance'
                             },
-              'keypair' => { 'create' => 'Create a new keypair',
+              'keypair' => { 'info'   => 'View information about this keypair',
+                             'create' => 'Create a new keypair',
                              'delete' => 'Delete an existing keypair'
                            }
             }
