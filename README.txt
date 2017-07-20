@@ -39,7 +39,7 @@ OpenStack -> os_dreamcompute
 dAnarchy_sys main menu commands:
 Enter 'help' to view available commands or 'exit' to leave.
 1. instance: Instance Manager
-2.  keypair: Keypair Manager (Not yet implemented!)
+2.  keypair: Keypair Manager
 3.     help: Outputs commands for current the menu level
 4.     exit: Exit dAnarchy_sys
 command ~: instance
