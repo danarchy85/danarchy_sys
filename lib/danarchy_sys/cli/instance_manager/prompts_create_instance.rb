@@ -79,12 +79,12 @@ class PromptsCreateInstance
       image_name = gets.chomp
 
       if image_name =~ /^[0-9]*$/
-        until images_numbered.keys.include?(image_name)
+        until images_numbered.keys.include?(image_name.to_i)
           print "#{image_name} is not a valid Id. Enter an Id from above: "
           image_name = gets.chomp
         end
 
-        image_name = images_numbered[image_name.to_s]
+        image_name = images_numbered[image_name.to_i]
       end
 
       image_check = images_numbered.values.include?(image_name)
