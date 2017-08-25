@@ -1,7 +1,7 @@
 
 class KeypairStatus
   def self.all_keypairs(os_compute)
-    keypairs = os_compute.compute_keypairs.all_keypairs
+    keypairs = os_compute.keypairs.all_keypairs
 
     keypairs.each do |keypair|
       single_keypair(keypair)

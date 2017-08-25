@@ -13,24 +13,24 @@ module DanarchySys
         @compute = Fog::Compute::OpenStack.new(connection)
       end
 
-      def compute_instances
+      def instances
         ComputeInstances.new(@compute, @settings)
       end
 
-      def compute_keypairs
+      def keypairs
         ComputeKeypairs.new(@compute, @settings)
       end
 
-      def compute_images
+      def images
         ComputeImages.new(@compute)
       end
 
-      def compute_flavors
+      def flavors
         ComputeFlavors.new(@compute)
       end
 
-      def compute_ssh(instance_name)
-        (comp_inst, comp_kp, comp_img) = compute_instances, compute_keypairs, compute_images
+      def ssh(instance_name)
+        (comp_inst, comp_kp, comp_img) = instances, keypairs, images
         instance = comp_inst.get_instance(instance_name)
         keypair_name = instance.key_name
         pemfile = comp_kp.pemfile_path(keypair_name)

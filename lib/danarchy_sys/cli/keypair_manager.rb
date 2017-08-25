@@ -3,7 +3,7 @@ require_relative './keypair_manager/keypair_status'
 
 class KeypairManager
   def self.manager(os_compute)
-    comp_kp = os_compute.compute_keypairs
+    comp_kp = os_compute.keypairs
     puts 'Keypair Manager: enter \'help\' to view available commands or \'main\' for the main menu.'
     menu = Menus.numbered_menu('keypair')
     keypair = false
@@ -63,7 +63,7 @@ class KeypairManager
   end
 
   def self.chooser(os_compute)
-    comp_kp = os_compute.compute_keypairs
+    comp_kp = os_compute.keypairs
     keypairs = comp_kp.list_keypairs
     keypair_numhash = Helpers.array_to_numhash(keypairs)
     keypair_name = 'nil'

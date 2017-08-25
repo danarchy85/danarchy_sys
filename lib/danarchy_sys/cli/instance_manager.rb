@@ -3,7 +3,7 @@ require_relative 'instance_manager/instance_status'
 
 class InstanceManager
   def self.manager(os_compute)
-    comp_inst = os_compute.compute_instances
+    comp_inst = os_compute.instances
     puts 'Instance Manager: enter \'help\' to view available commands or \'main\' for the main menu.'
     menu = Menus.numbered_menu('instance')
     instance = false
@@ -60,7 +60,7 @@ class InstanceManager
         end
         
         until status != instance.state
-          instance = os_compute.compute_instances.get_instance(instance.name)
+          instance = os_compute.instances.get_instance(instance.name)
           sleep(3)
           print ' .'
         end
@@ -68,7 +68,7 @@ class InstanceManager
         printf("\n%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
       elsif cmd == 'connect'
         if instance.state == 'ACTIVE'
-          os_compute.compute_ssh(instance.name.to_s)
+          os_compute.ssh(instance.name.to_s)
         else
           puts "Unable to connect: #{instance.name} is not running!"
         end
@@ -82,7 +82,7 @@ class InstanceManager
   end
 
   def self.chooser(os_compute)
-    comp_inst = os_compute.compute_instances
+    comp_inst = os_compute.instances
     instances = comp_inst.all_instances
     instances_numhash = Helpers.objects_to_numhash(instances)
     instance_name = 'nil'

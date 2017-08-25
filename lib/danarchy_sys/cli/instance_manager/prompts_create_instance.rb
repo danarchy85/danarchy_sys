@@ -2,10 +2,10 @@
 # CLI Prompt to create a new instance
 class PromptsCreateInstance
   def self.create_instance(os_compute, instance_name)
-    comp_inst = os_compute.compute_instances
-    comp_imgs = os_compute.compute_images
-    comp_flvs = os_compute.compute_flavors
-    comp_keys = os_compute.compute_keypairs
+    comp_inst = os_compute.instances
+    comp_imgs = os_compute.images
+    comp_flvs = os_compute.flavors
+    comp_keys = os_compute.keypairs
 
     # Prompt for and check that instance_name is unused
     if instance_name == 'nil'

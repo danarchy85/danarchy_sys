@@ -27,9 +27,9 @@ class InstanceStatus
   end
 
   def self.single_instance(os_compute, instance)
-    comp_inst = os_compute.compute_instances
-    comp_imgs = os_compute.compute_images
-    comp_flvs = os_compute.compute_flavors
+    comp_inst = os_compute.instances
+    comp_imgs = os_compute.images
+    comp_flvs = os_compute.flavors
 
     image  = comp_imgs.get_image_by_id(instance.image['id'])
     flavor = comp_flvs.get_flavor_by_id(instance.flavor['id'])
