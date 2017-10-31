@@ -2,7 +2,6 @@ require_relative 'compute/instances'
 require_relative 'compute/keypairs'
 require_relative 'compute/images'
 require_relative 'compute/flavors'
-require_relative 'compute/secgroups'
 
 module DanarchySys
   module OpenStack
