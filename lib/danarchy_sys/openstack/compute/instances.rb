@@ -6,100 +6,115 @@ class ComputeInstances
     @settings = settings
   end
   
-  def all_instances
-    @compute.servers
+  def all_instances(*filter)
+    filter = filter.shift || {}
+    @compute.servers(filters: filter)
   end
 
   def list_all_instances
-    instances = all_instances
-    instances.map(&:name)
+    all_instances.collect { |i| i.name }
   end
 
   def list_active_instances
-    instances = all_instances
-    instance_list = []
-
-    instances.each do |i|
-      instance_list.push(i.name) if i.state == 'ACTIVE'
-    end
-
-    instance_list
+    all_instances({ 'status' => ['ACTIVE'] }).collect { |i| i.name }
   end
 
   def check_instance(instance_name)
-    instances = list_all_instances
-
-    return true if instances.include?(instance_name)
+    return false if instance_name == nil || instance_name.empty? == true
+    return true if get_instance(instance_name)
     false
   end
 
   def get_instance(instance_name)
-    servers = all_instances
-
-    # Get servers ID based on input instance_name
-    instance = 'nil'
-    servers.each do |i|
-      instance = i if i.name.end_with?(instance_name)
-    end
-
-    return false unless instance
-    instance
+    instance = all_instances({ 'name' => [instance_name] })
+    return false if !instance.first
+    return false if !instance.collect{ |i| i.name }.include?(instance_name)
+    instance.first
   end
 
-  def get_addresses(instance_name)
-    instance = get_instance(instance_name)
-   (ipv6, ipv4) = nil, nil
-   addresses = instance.addresses['public']
-
-    addresses.each do |i|
-      ipv4 = i['addr'] if i['addr'].include?('.')
-      ipv6 = i['addr'] if i['addr'].include?(':')
+  def get_public_addresses(instance)
+    if instance.class == String
+      instance = get_instance(instance)
     end
 
-    return ipv4, ipv6
+    addrs = instance.addresses
+    return false if !addrs['public']
+    addrs['public'].map{|a| a['addr']}
   end
 
-  def pause(instance_name)
-    instance = get_instance(instance_name)
+  def get_private_addresses(instance)
+    if instance.class == String
+      instance = get_instance(instance)
+    end
+
+    addrs = instance.addresses
+    return false if !addrs['private']
+    addrs['public'].map{|a| a['addr']}
+  end
+
+  def pause(instance)
+    if instance.class == String
+      instance = get_instance(instance)
+    end
+
     return false unless instance.state == 'ACTIVE'
-    @compute.pause_server(instance.id)
+    instance.pause
   end
 
-  def unpause(instance_name)
-    instance = get_instance(instance_name)
+  def unpause(instance)
+    if instance.class == String
+      instance = get_instance(instance)
+    end
+
     return false unless instance.state == 'PAUSED'
-    @compute.unpause_server(instance.id)
+    instance.start
   end
 
-  def suspend(instance_name)
-    instance = get_instance(instance_name)
+  def suspend(instance)
+    if instance.class == String
+      instance = get_instance(instance)
+    end
+
     return false unless instance.state == 'ACTIVE'
-    @compute.suspend_server(instance.id)
+    instance.suspend
   end
 
-  def resume(instance_name)
-    instance = get_instance(instance_name)
+  def resume(instance)
+    if instance.class == String
+      instance = get_instance(instance)
+    end
+
     return false unless instance.state == 'SUSPENDED'
-    @compute.resume_server(instance.id)
+    instance.start
   end
 
-  def start(instance_name)
-    instance = get_instance(instance_name)
+  def start(instance)
+    if instance.class == String
+      instance = get_instance(instance)
+    end
+
     return false unless instance.state == 'SHUTOFF'
-    @compute.start_server(instance.id)
+    instance.start
   end
 
-  def stop(instance_name)
-    instance = get_instance(instance_name)
+  def stop(instance)
+    if instance.class == String
+      instance = get_instance(instance)
+    end
+
     return false unless instance.state == 'ACTIVE'
-    @compute.stop_server(instance.id)
+    instance.stop
   end
 
-  def create_instance(instance_name, image_id, flavor_id, keypair_name)
+  def create_instance(instance_name, image_id, flavor_id, keypair_name, *user_data)
+    user_data = nil if user_data.empty?
+
     instance = @compute.servers.create(name: instance_name,
                                       image_ref: image_id,
                                       flavor_ref: flavor_id,
-                                      key_name: keypair_name)
+                                      key_name: keypair_name,
+                                      user_data: user_data)
+    
     # add security_group
 
     # Put error handling from instance_prompts here

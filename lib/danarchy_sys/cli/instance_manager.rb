@@ -58,7 +58,7 @@ class InstanceManager
           puts "\nInvalid action for #{instance.name}'s current status!"
           next
         end
-        
+
         until status != instance.state
           instance = os_compute.instances.get_instance(instance.name)
           sleep(3)
@@ -66,9 +66,30 @@ class InstanceManager
         end
 
         printf("\n%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+      elsif cmd == 'rebuild'
+        print "Should we rebuild #{instance.name}? (Y/N): "
+        if gets.chomp =~ /^y(es)?$/i
+          image = PromptsCreateInstance.image(os_compute.images)
+          instance.rebuild(image.id, instance.name)
+
+          print "Rebuilding #{instance.name} with #{image.name}"
+          instance = os_compute.instances.get_instance(instance.name)
+          until instance.state == 'ACTIVE'
+            instance = os_compute.instances.get_instance(instance.name)
+            sleep(3)
+            print ' .'
+          end
+
+          addrs = os_compute.instances.get_public_addresses(instance.name)
+          addrs.each { |ip| `ssh-keygen -R #{ip} &>/dev/null` }
+          puts "\nRebuild successful!"
+        else
+          puts "Not rebuilding #{instance.name} at this time."
+        end
       elsif cmd == 'connect'
         if instance.state == 'ACTIVE'
-          os_compute.ssh(instance.name.to_s)
+          connect = os_compute.ssh(instance.name)
+          puts connect if connect != true
         else
           puts "Unable to connect: #{instance.name} is not running!"
         end
@@ -84,12 +105,12 @@ class InstanceManager
   def self.chooser(os_compute)
     comp_inst = os_compute.instances
     instances = comp_inst.all_instances
-    instances_numhash = Helpers.objects_to_numhash(instances)
-    instance_name = 'nil'
-    instance = 'nil'
+    instances_numhash = Helpers.objects_to_numhash(comp_inst.all_instances)
+    instance_name = nil
+    instance = nil
 
     # Create a new instances if none exist
-    if instances_numhash.empty?
+    if instances.empty?
       print 'No existing instances were found. Should we create a new one? (Y/N): '
       abort('Exiting!') unless gets.chomp =~ /^y(es)?$/i
       instance = PromptsCreateInstance.create_instance(os_compute, 'nil')
@@ -97,16 +118,14 @@ class InstanceManager
       return instance
     end
 
-    # Display existing instances in numbered hash
-    fields = PrintFormats.printf_numhash_values(instances_numhash, [:name, :state])
-
     puts 'Available instances:'
-    InstanceStatus.all_instances(os_compute, instances)
-    
+    istatus = InstanceStatus.new(os_compute)
+    istatus.all_instances(instances)
+
     # Loop input until an existing instance is selected
     print 'Enter an instance to manage or enter a name for a new instance: '
 
-    until Helpers.check_nested_hash_value(instances_numhash, :name, instance_name) == true
+    until comp_inst.check_instance(instance_name) == true
       instance_name = gets.chomp
 
       until instance_name.empty? == false
@@ -127,13 +146,12 @@ class InstanceManager
         instance_name = instances_numhash[instance_name.to_i][:name].to_s
       end
 
-      unless Helpers.check_nested_hash_value(instances_numhash, :name, instance_name) == true
+      unless comp_inst.check_instance(instance_name) == true
         print "#{instance_name} is not a valid instance.
 Should we create a new instance named #{instance_name}? (Y/N): "
 
         if gets.chomp =~ /^y(es)?$/i
           PromptsCreateInstance.create_instance(os_compute, instance_name)
-          instances_numhash = Helpers.objects_to_numhash(comp_inst.all_instances)
         else
           puts "Not creating new instance: #{instance_name}."
           return false
@@ -142,9 +160,8 @@ Should we create a new instance named #{instance_name}? (Y/N): "
     end
 
     instance = comp_inst.get_instance(instance_name)
-    status = instance.state
     Menus.print_menu('instance')
-    puts "Managing instance: #{instance_name}\tStatus: #{status}"
+    puts "Managing instance: #{instance_name}\tStatus: #{instance.state}"
     instance
   end
 end

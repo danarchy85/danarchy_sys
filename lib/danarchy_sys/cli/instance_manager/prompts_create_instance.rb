@@ -8,7 +8,7 @@ class PromptsCreateInstance
     comp_keys = os_compute.keypairs
 
     # Prompt for and check that instance_name is unused
-    if instance_name == 'nil'
+    if instance_name == nil
       print "\nWhat should we name the instance?: "
       instance_name = gets.chomp
     end
@@ -40,7 +40,7 @@ class PromptsCreateInstance
     puts "      Keypair: #{keypair.name}"
 
     print 'Should we continue with creating the instance? (Y/N): '
-    instance = 'nil'
+    instance = nil
     continue = gets.chomp
 
     if continue =~ /^y(es)?$/i
@@ -62,79 +62,40 @@ class PromptsCreateInstance
   end
 
   def self.image(comp_imgs)
-    images_numbered = Helpers.array_to_numhash(comp_imgs.list_images)
-    image_name = 'nil'
+    images_numbered = Helpers.objects_to_numhash(comp_imgs.all_images({'status' => 'ACTIVE'}))
 
     # List available images in a numbered hash.
     puts "\nAvailable Images:"
-    i_name_length = Helpers.hash_largest_value(images_numbered).length
+    i_name_length = images_numbered.values.collect{|i| i[:name]}.max.size
     printf("%0s %-#{i_name_length}s\n", 'Id', 'Image')
-    images_numbered.each do |id, i_name|
-      printf("%0s %-#{i_name_length}s\n", "#{id}.", i_name)
+    images_numbered.each do |id, image|
+      printf("%0s %-#{i_name_length}s\n", "#{id}.", image[:name])
     end
 
-    # Loop input until existing image is selected
-    print 'Which image should we use for this instance?: '
-    until images_numbered.values.include?(image_name)
-      image_name = gets.chomp
-
-      if image_name =~ /^[0-9]*$/
-        until images_numbered.keys.include?(image_name.to_i)
-          print "#{image_name} is not a valid Id. Enter an Id from above: "
-          image_name = gets.chomp
-        end
-
-        image_name = images_numbered[image_name.to_i]
-      end
-
-      image_check = images_numbered.values.include?(image_name)
-      print "#{image_name} is not a valid image. Please enter an option from above: " if image_check == false
-    end
-
+    image_name = item_chooser(images_numbered, 'image')
     print "Image Name: #{image_name}\n"
     comp_imgs.get_image_by_name(image_name)
   end
 
   def self.flavor(comp_flvs)
-    flavors = Helpers.objects_to_numhash(comp_flvs.all_flavors.sort_by(&:ram))
-    flavor_name = 'nil'
+    flavors_numbered = Helpers.objects_to_numhash(comp_flvs.all_flavors.sort_by(&:ram))
+    flavor_name = nil
 
     puts "\nAvailable Instance Flavors:"
     puts sprintf("%0s %-15s %-10s %-10s %0s", 'Id', 'Name', 'RAM', 'VCPUs', 'Disk')
-    flavors.each do |id, flavor|
+    flavors_numbered.each do |id, flavor|
       print sprintf("%0s %-15s %-10s %-10s %0s\n",
                     "#{id}.", flavor[:name].split('.')[1], flavor[:ram], flavor[:vcpus], flavor[:disk])
     end
 
-    print 'Which flavor should we use for this instance?: '
-    flavor_check = false
-
-    until flavor_check == true
-      flavor_name = gets.chomp
-
-      if flavor_name =~ /^[0-9]*$/
-        until flavors.keys.include?(flavor_name.to_i)
-          print "#{flavor_name} is not a valid Id. Enter an Id from above: "
-          flavor_name = gets.chomp
-        end
-
-        flavor_name = flavors[flavor_name.to_i][:name].split('.')[1]
-      end
-      
-      flavors.each_value do |flavor|
-        flavor_check = true if flavor[:name].end_with?(flavor_name)
-      end
-
-      print "#{flavor_name} is not a valid flavor. Please enter an option from above: " if flavor_check == false
-    end
-
-    print "Flavor Name: #{flavor_name}\n"
+    flavor_name = item_chooser(flavors_numbered, 'flavor')
+    print "Flavor Name: #{flavor_name.split('.')[1]}\n"
     comp_flvs.get_flavor(flavor_name)
   end
 
   def self.keypair(comp_keys)
     keypairs = Helpers.objects_to_numhash(comp_keys.all_keypairs)
-    keypair_name = 'nil'
+    keypair_name = nil
 
     # List available keypairs
     puts "\nAvailable Keypairs:"
@@ -178,5 +139,29 @@ Should we create a new keypair named #{keypair_name}? (Y/N): "
     end
 
     comp_keys.get_keypair(keypair_name)
+  end
+
+  private
+  def self.item_chooser(items_numbered, item)
+    # Loop input until existing object is selected
+    item_name = nil
+    print "Which #{item} should we use for this instance?: "
+
+    until items_numbered.values.collect{|i| i[:name]}.include?(item_name)
+      item_name = gets.chomp
+
+      if item_name =~ /^[0-9]*$/
+        until items_numbered.keys.include?(item_name.to_i)
+          print "#{item_name} is not a valid Id. Enter an Id from above: "
+          item_name = gets.chomp
+        end
+
+        item_name = items_numbered[item_name.to_i][:name]
+      end
+
+      item_check = items_numbered.values.collect{|i| i[:name]}.include?(item_name)
+      print "#{item_name} is not a valid item. Please enter an option from above: " if item_check == false
+    end
+    item_name
   end
 end

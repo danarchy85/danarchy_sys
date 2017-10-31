@@ -14,6 +14,7 @@ class Menus
                               'unpause' => 'Unpause instance from paused state',
                               'suspend' => 'Suspend Instance (to disk)',
                               'resume'  => 'Resume instance from suspended state',
+                              'rebuild' => 'Rebuilds instance with a chosen image',
                               'create'  => 'Create a new instance',
                               'delete'  => 'Delete this instance'
                             },
