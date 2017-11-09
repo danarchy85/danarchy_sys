@@ -47,9 +47,10 @@ module DanarchySys
         image_id = instance.image['id']
         image = comp_img.get_image_by_id(image_id)
 
+        ssh = nil
         if image == nil
           puts "Image not found for #{instance.name}! This instance needs to be rebuild with a current image."
-          return fallback_ssh(ipv4, pemfile)          
+          return fallback_ssh(ipv4, pemfile)
         end
 
         # CoreOS is an exception with user as simply 'core' and not 'coreos'
@@ -69,24 +70,25 @@ module DanarchySys
           sleep(5)
           fallback_ssh(ipv4, pemfile)
           attempts += 1
+          puts 'Giving up after 3 tries.' if attempts > 3
         end
+
+        ssh
       end
 
       def fallback_ssh(ipv4, pemfile)
         users = ['ubuntu','debian','centos','fedora','core']
-        ssh = false
+        ssh = nil
 
         users.each do |user|
           puts "Attempting connection as user: #{user} => #{ipv4}"
           connect = "ssh #{user}@#{ipv4} -i '#{pemfile}'"
           ssh = system(connect)
-          return true if ssh == true
+          break if ssh == true
         end
 
-        if ssh == false
-          puts 'Unable to connect after 3 tries!'
-          return false
-        end
+        puts 'Unable to connect! User unknown or SSHd is not running on the instance.' if ssh == false
+        ssh
       end
     end
   end
