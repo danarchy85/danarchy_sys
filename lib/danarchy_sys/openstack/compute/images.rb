@@ -1,39 +1,27 @@
 
 # OpenStack Image Management
 class ComputeImages
-  def initialize(compute)
+  def initialize(compute, images)
     @compute = compute
+    @images = images
   end
 
   def all_images(*filter)
-    filter = filter.shift || {}
-    @compute.images(filters: filter)
-  end
-
-  def list_all_images
-    all_images.collect { |i| i.name }
-  end
-
-  def list_active_images
-    all_images({'status' => 'ACTIVE'})
+    filter = filter.shift || {'status' => ['ACTIVE']}
+    @images = @compute.images(filters: filter)
   end
 
   def get_image_by_name(image_name)
-    all_images({
-                 'status' => 'ACTIVE',
-                 'name'   => image_name
-               }).first
-    # .first may become a problem here
-    # if names are duplicates
+    @images.collect do |i|
+      next unless i.status == 'ACTIVE'
+      next unless i.name == image_name
+      i
+    end.compact!.first
   end
 
   def get_image_by_id(image_id)
-    image = nil
-    
-    all_images.each do |i|
-      image = i if i.id == image_id
-    end
-
-    image
+    @images.collect do |i|
+      i if i.id == image_id
+    end.compact!.first
   end
 end

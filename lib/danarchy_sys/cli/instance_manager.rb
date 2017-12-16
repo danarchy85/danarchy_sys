@@ -14,7 +14,7 @@ class InstanceManager
         return Menus.print_menu('main') if instance == 'main'
       end
 
-      print "#{instance.name} ~: "
+      print "#{instance.name} ~: " if instance
       cmd = gets.chomp
 
       next if cmd.empty?
@@ -67,29 +67,18 @@ class InstanceManager
 
         printf("\n%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
       elsif cmd == 'rebuild'
-        print "Should we rebuild #{instance.name}? (Y/N): "
+        image = PromptsCreateInstance.image(os_compute.images)
+        print "Should we rebuild #{instance.name} with image: #{image.name}? (Y/N): "
         if gets.chomp =~ /^y(es)?$/i
-          image = PromptsCreateInstance.image(os_compute.images)
-          instance.rebuild(image.id, instance.name)
-
-          print "Rebuilding #{instance.name} with #{image.name}"
-          instance = os_compute.instances.get_instance(instance.name)
-          until instance.state == 'ACTIVE'
-            instance = os_compute.instances.get_instance(instance.name)
-            sleep(3)
-            print ' .'
-          end
-
-          addrs = os_compute.instances.get_public_addresses(instance.name)
-          addrs.each { |ip| `ssh-keygen -R #{ip} &>/dev/null` }
+          puts "Rebuilding #{instance.name} with #{image.name}"
+          instance = os_compute.instances.rebuild_instance(instance, image)
           puts "\nRebuild successful!"
         else
           puts "Not rebuilding #{instance.name} at this time."
         end
       elsif cmd == 'connect'
         if instance.state == 'ACTIVE'
-          connect = os_compute.ssh(instance.name)
-          puts connect if connect != true
+          os_compute.ssh(instance.name)          
         else
           puts "Unable to connect: #{instance.name} is not running!"
         end
@@ -103,14 +92,12 @@ class InstanceManager
   end
 
   def self.chooser(os_compute)
-    comp_inst = os_compute.instances
-    instances = comp_inst.all_instances
-    instances_numhash = Helpers.objects_to_numhash(comp_inst.all_instances)
+    instances_numhash = Helpers.objects_to_numhash(os_compute.instances.all_instances)
     instance_name = nil
     instance = nil
 
     # Create a new instances if none exist
-    if instances.empty?
+    if instances_numhash.empty?
       print 'No existing instances were found. Should we create a new one? (Y/N): '
       abort('Exiting!') unless gets.chomp =~ /^y(es)?$/i
       instance = PromptsCreateInstance.create_instance(os_compute, 'nil')
@@ -120,12 +107,12 @@ class InstanceManager
 
     puts 'Available instances:'
     istatus = InstanceStatus.new(os_compute)
-    istatus.all_instances(instances)
+    istatus.all_instances(instances_numhash)
 
     # Loop input until an existing instance is selected
     print 'Enter an instance to manage or enter a name for a new instance: '
 
-    until comp_inst.check_instance(instance_name) == true
+    until instances_numhash.values.collect{|i| i[:name]}.include?(instance_name) # os_compute.instances.check_instance(instance_name) == true
       instance_name = gets.chomp
 
       until instance_name.empty? == false
@@ -146,20 +133,21 @@ class InstanceManager
         instance_name = instances_numhash[instance_name.to_i][:name].to_s
       end
 
-      unless comp_inst.check_instance(instance_name) == true
+      unless instances_numhash.values.collect{|i| i[:name]}.include?(instance_name) # os_compute.instances.check_instance(instance_name) == true
         print "#{instance_name} is not a valid instance.
 Should we create a new instance named #{instance_name}? (Y/N): "
 
         if gets.chomp =~ /^y(es)?$/i
-          PromptsCreateInstance.create_instance(os_compute, instance_name)
+          instance = PromptsCreateInstance.create_instance(os_compute, instance_name)
+          return instance
         else
           puts "Not creating new instance: #{instance_name}."
-          return false
+          return
         end
       end
     end
 
-    instance = comp_inst.get_instance(instance_name)
+    instance = os_compute.instances.get_instance(instance_name)
     Menus.print_menu('instance')
     puts "Managing instance: #{instance_name}\tStatus: #{instance.state}"
     instance

@@ -8,7 +8,7 @@ class InstanceStatus
   def all_instances(instances)
     istats = {}
 
-    instances.map.with_index(1) do |instance, id|
+    instances.each do |id, instance|
       istats[id] = single_instance(instance)
     end
 
@@ -32,29 +32,22 @@ class InstanceStatus
   end
 
   def single_instance(instance)
-    image  = @images.get_image_by_id(instance.image['id'])
-    flavor = @flavors.get_flavor_by_id(instance.flavor['id'])
+    image = Helpers.object_to_hash(@images.get_image_by_id(instance[:image]['id']))
+    flavor = Helpers.object_to_hash(@flavors.get_flavor_by_id(instance[:flavor]['id']))
+    
+    image = {:name => 'Not Found'} if image == nil
 
-    image = NilImage.new if image == nil
-
-    istats = { 'name'  => instance.name,
-               'status' => instance.state,
-               'image' => image.name,
-               'vcpus' => flavor.vcpus,
-               'ram'   => flavor.ram,
-               'disk'  => flavor.disk,
-               'keypair' => instance.key_name,
+    istats = { 'name'  => instance[:name],
+               'status' => instance[:state],
+               'image' => image[:name],
+               'vcpus' => flavor[:vcpus],
+               'ram'   => flavor[:ram],
+               'disk'  => flavor[:disk],
+               'keypair' => instance[:key_name],
              }
   end
 
   def _header(format)
     printf("#{format}\n", 'Id', 'Name', 'Status', 'Image', 'VCPUS', 'RAM', 'Disk', 'KeyPair')
   end
-
-  class NilImage
-    def name
-      'Not Found'
-    end
-  end
 end
-
