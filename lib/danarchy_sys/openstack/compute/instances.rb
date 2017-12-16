@@ -1,22 +1,25 @@
 
 # OpenStack Instance Management
 class ComputeInstances
-  def initialize(compute, settings)
+  def initialize(compute, instances, settings)
     @compute = compute
+    @instances = instances
     @settings = settings
   end
   
   def all_instances(*filter)
     filter = filter.shift || {}
-    @compute.servers(filters: filter)
+    @instances = @compute.servers(filters: filter)
   end
 
   def list_all_instances
-    all_instances.collect { |i| i.name }
+    @instances.collect { |i| i.name }
   end
 
   def list_active_instances
-    all_instances({ 'status' => ['ACTIVE'] }).collect { |i| i.name }
+    @instances.collect do |i|
+      i.name if i.status == 'ACTIVE'
+    end.compact!
   end
 
   def check_instance(instance_name)
@@ -33,74 +36,56 @@ class ComputeInstances
   end
 
   def get_public_addresses(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
-
+    instance = get_instance(instance) if instance.class == String
     addrs = instance.addresses
-    return false if !addrs['public']
+    return nil if !addrs['public']
     addrs['public'].map{|a| a['addr']}
   end
 
   def get_private_addresses(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
-
+    instance = get_instance(instance) if instance.class == String
     addrs = instance.addresses
-    return false if !addrs['private']
+    return nil if !addrs['private']
     addrs['public'].map{|a| a['addr']}
   end
 
   def pause(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
+    instance = get_instance(instance) if instance.class == String
 
     return false unless instance.state == 'ACTIVE'
     instance.pause
   end
 
   def unpause(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
+    instance = get_instance(instance) if instance.class == String
 
     return false unless instance.state == 'PAUSED'
     instance.start
   end
 
   def suspend(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
+    instance = get_instance(instance) if instance.class == String
 
     return false unless instance.state == 'ACTIVE'
     instance.suspend
   end
 
   def resume(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
+    instance = get_instance(instance) if instance.class == String
 
     return false unless instance.state == 'SUSPENDED'
     instance.start
   end
 
   def start(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
+    instance = get_instance(instance) if instance.class == String
 
     return false unless instance.state == 'SHUTOFF'
     instance.start
   end
 
   def stop(instance)
-    if instance.class == String
-      instance = get_instance(instance)
-    end
+    instance = get_instance(instance) if instance.class == String
 
     return false unless instance.state == 'ACTIVE'
     instance.stop
@@ -116,6 +101,8 @@ class ComputeInstances
                                       user_data: user_data)
     
     # add security_group
+    # add volumes
+    # handle user_data with base64 encoding
 
     # Put error handling from instance_prompts here
     
@@ -123,10 +110,23 @@ class ComputeInstances
     instance
   end
 
-  def delete_instance(instance_name)
-    # check for and delete instance
-    instance = get_instance(instance_name)
+  def rebuild_instance(instance, image)
+    instance = get_instance(instance) if instance.class == String
+
+    instance.rebuild(image.id, instance.name)
+    addrs = [get_public_addresses(instance),
+             get_private_addresses(instance)].flatten.compact!
+    addrs.each { |addr| system("ssh-keygen -R #{addr}") }
+
+    instance.wait_for { ready? }
+    instance
+  end
+
+  def delete_instance(instance)
+    instance = get_instance(instance) if instance.class == String    
     return 1 if instance == false
+
+    instance_name = instance.name
     @compute.delete_server(instance.id)
 
     attempt = 1
@@ -135,6 +135,10 @@ class ComputeInstances
       sleep(5)
       attempt += 1
     end
+
+    addrs = [get_public_addresses(instance),
+             get_private_addresses(instance)].flatten.compact!
+    addrs.each { |addr| system("ssh-keygen -R #{addr}") }
 
     return true
   end

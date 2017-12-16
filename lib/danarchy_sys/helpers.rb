@@ -4,10 +4,8 @@ class Helpers
   def self.array_to_numhash(array)
     numbered_hash = {}
     
-    count = 1
-    array.sort.each do |item|
-      numbered_hash[count] = item
-      count += 1
+    array.each.with_index(1) do |item, id|
+      numbered_hash[id] = item
     end
 
     numbered_hash
@@ -23,7 +21,13 @@ class Helpers
     numbered_hash
   end
 
+  def self.object_to_hash(object)
+    return nil if !object
+    object.all_attributes
+  end
+
   def self.objects_to_numhash(objects)
+    return nil if !objects
     numbered_object_hash = {}
 
     objects.map.with_index(1) do | obj, index |

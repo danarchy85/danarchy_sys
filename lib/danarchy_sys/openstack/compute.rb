@@ -11,10 +11,13 @@ module DanarchySys
         connection = danarchysys_config[:connections][provider.to_sym]
         @settings = danarchysys_config[:global_settings]
         @compute = Fog::Compute::OpenStack.new(connection)
+        @instances = @compute.servers
+        @images = @compute.images(filters: {'status' => ['ACTIVE']})
+        @flavors = @compute.flavors
       end
 
       def instances
-        ComputeInstances.new(@compute, @settings)
+        ComputeInstances.new(@compute, @instances, @settings)
       end
 
       def keypairs
@@ -22,11 +25,11 @@ module DanarchySys
       end
 
       def images
-        ComputeImages.new(@compute)
+        ComputeImages.new(@compute, @images)
       end
 
       def flavors
-        ComputeFlavors.new(@compute)
+        ComputeFlavors.new(@compute, @flavors)
       end
 
       def secgroups
@@ -50,8 +53,10 @@ module DanarchySys
         ssh = nil
         if image == nil
           puts "Image not found for #{instance.name}! This instance needs to be rebuild with a current image."
-          return fallback_ssh(ipv4, pemfile)
+          ssh = fallback_ssh(ipv4, pemfile)
         end
+
+        return ssh if ssh == true
 
         # CoreOS is an exception with user as simply 'core' and not 'coreos'
         user = 'ubuntu' if image.name =~ /ubuntu/i
