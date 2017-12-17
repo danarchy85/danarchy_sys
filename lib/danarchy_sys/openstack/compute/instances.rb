@@ -18,7 +18,7 @@ class ComputeInstances
 
   def list_active_instances
     @instances.collect do |i|
-      i.name if i.status == 'ACTIVE'
+      i.name if i.state == 'ACTIVE'
     end.compact!
   end
 
