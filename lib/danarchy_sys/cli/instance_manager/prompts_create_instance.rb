@@ -62,14 +62,14 @@ class PromptsCreateInstance
   end
 
   def self.image(comp_imgs)
-    images_numbered = Helpers.objects_to_numhash(comp_imgs.all_images({'status' => 'ACTIVE'}))
+    images_numbered = Helpers.array_to_numhash(comp_imgs.all_images)
 
     # List available images in a numbered hash.
     puts "\nAvailable Images:"
-    i_name_length = images_numbered.values.collect{|i| i[:name]}.max.size
+    i_name_length = images_numbered.values.collect{|i| i.name}.max.size
     printf("%0s %-#{i_name_length}s\n", 'Id', 'Image')
     images_numbered.each do |id, image|
-      printf("%0s %-#{i_name_length}s\n", "#{id}.", image[:name])
+      printf("%0s %-#{i_name_length}s\n", "#{id}.", image.name)
     end
 
     image_name = item_chooser(images_numbered, 'image')
@@ -78,19 +78,19 @@ class PromptsCreateInstance
   end
 
   def self.flavor(comp_flvs)
-    flavors_numbered = Helpers.objects_to_numhash(comp_flvs.all_flavors.sort_by(&:ram))
-    flavor_name = nil
+    flavors_numbered = Helpers.array_to_numhash(comp_flvs.all_flavors.sort_by(&:ram))
 
     puts "\nAvailable Instance Flavors:"
     puts sprintf("%0s %-15s %-10s %-10s %0s", 'Id', 'Name', 'RAM', 'VCPUs', 'Disk')
     flavors_numbered.each do |id, flavor|
       print sprintf("%0s %-15s %-10s %-10s %0s\n",
-                    "#{id}.", flavor[:name].split('.')[1], flavor[:ram], flavor[:vcpus], flavor[:disk])
+                    "#{id}.", flavor.name.split('.')[1], flavor.ram, flavor.vcpus, flavor.disk)
     end
 
     flavor_name = item_chooser(flavors_numbered, 'flavor')
     print "Flavor Name: #{flavor_name.split('.')[1]}\n"
-    comp_flvs.get_flavor(flavor_name)
+    p comp_flvs.methods
+    comp_flvs.get_flavor_by_name(flavor_name)
   end
 
   def self.keypair(comp_keys)
@@ -147,7 +147,7 @@ Should we create a new keypair named #{keypair_name}? (Y/N): "
     item_name = nil
     print "Which #{item} should we use for this instance?: "
 
-    until items_numbered.values.collect{|i| i[:name]}.include?(item_name)
+    until items_numbered.values.collect{|i| i.name}.include?(item_name)
       item_name = gets.chomp
 
       if item_name =~ /^[0-9]*$/
@@ -156,10 +156,10 @@ Should we create a new keypair named #{keypair_name}? (Y/N): "
           item_name = gets.chomp
         end
 
-        item_name = items_numbered[item_name.to_i][:name]
+        item_name = items_numbered[item_name.to_i].name
       end
 
-      item_check = items_numbered.values.collect{|i| i[:name]}.include?(item_name)
+      item_check = items_numbered.values.collect{|i| i.name}.include?(item_name)
       print "#{item_name} is not a valid item. Please enter an option from above: " if item_check == false
     end
     item_name
