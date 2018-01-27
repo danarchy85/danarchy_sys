@@ -89,7 +89,6 @@ class PromptsCreateInstance
 
     flavor_name = item_chooser(flavors_numbered, 'flavor')
     print "Flavor Name: #{flavor_name.split('.')[1]}\n"
-    p comp_flvs.methods
     comp_flvs.get_flavor_by_name(flavor_name)
   end
 
