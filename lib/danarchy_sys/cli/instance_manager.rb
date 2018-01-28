@@ -142,7 +142,7 @@ Should we create a new instance named #{instance_name}? (Y/N): "
           return instance
         else
           puts "Not creating new instance: #{instance_name}."
-          return
+          return false
         end
       end
     end

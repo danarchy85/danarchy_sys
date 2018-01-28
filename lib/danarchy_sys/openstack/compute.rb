@@ -50,50 +50,48 @@ module DanarchySys
         image_id = instance.image['id']
         image = comp_img.get_image_by_id(image_id)
 
-        ssh = nil
+        ssh, user = nil
         if image == nil
           puts "Image not found for #{instance.name}! This instance needs to be rebuild with a current image."
-          ssh = fallback_ssh(ipv4, pemfile)
+          ssh, user = fallback_ssh(ipv4, pemfile)
+        else
+          user = 'ubuntu' if image.name =~ /ubuntu/i
+          user = 'debian' if image.name =~ /debian/i
+          user = 'centos' if image.name =~ /centos/i
+          user = 'fedora' if image.name =~ /fedora/i
+          user = 'core'   if image.name =~ /coreos/i
         end
 
-        return ssh if ssh == true
+        return if !user
 
-        # CoreOS is an exception with user as simply 'core' and not 'coreos'
-        user = 'ubuntu' if image.name =~ /ubuntu/i
-        user = 'debian' if image.name =~ /debian/i
-        user = 'centos' if image.name =~ /centos/i
-        user = 'fedora' if image.name =~ /fedora/i
-        user = 'core'   if image.name =~ /coreos/i
-
-        puts "Connecting as user: #{user} => #{ipv4}"
-        connect = "ssh #{user}@#{ipv4} -i '#{pemfile}'"
-        ssh = system(connect)
-
-        attempts = 1
-        until ssh == true || attempts > 3
-          puts "Connection failed. Attempting again after 5 seconds..."
-          sleep(5)
-          fallback_ssh(ipv4, pemfile)
-          attempts += 1
-          puts 'Giving up after 3 tries.' if attempts > 3
-        end
-
-        ssh
+        puts "Connecting as user: #{user} @ #{ipv4}"
+        connect = "/usr/bin/ssh -i '#{pemfile}' #{user}@#{ipv4}"
+        system(connect)
       end
 
       def fallback_ssh(ipv4, pemfile)
-        users = ['ubuntu','debian','centos','fedora','core']
-        ssh = nil
+        users = %w[centos ubuntu debian fedora core]
+        ssh, user = nil
 
-        users.each do |user|
-          puts "Attempting connection as user: #{user} => #{ipv4}"
-          connect = "ssh #{user}@#{ipv4} -i '#{pemfile}'"
-          ssh = system(connect)
-          break if ssh == true
+        users.each do |username|
+          print "Attempting connection as user: #{username} @ #{ipv4} => "
+          connect = "/usr/bin/ssh -i '#{pemfile}' #{username}@#{ipv4}"
+          ssh = system("#{connect} 'uptime' &>/dev/null")
+          puts 'failed' if ssh ==false
+
+          if ssh == true
+            puts 'success'
+            user = username
+            break
+          end
         end
 
-        puts 'Unable to connect! User unknown or SSHd is not running on the instance.' if ssh == false
-        ssh
+        if ssh == false
+          puts 'Unable to connect! User unknown or SSHd is not running on the instance.' 
+          return ssh, nil
+        else
+          return [ssh, user]
+        end
       end
     end
   end
