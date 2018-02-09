@@ -6,9 +6,9 @@ require_relative 'compute/flavors'
 module DanarchySys
   module OpenStack
     class Compute
-      def initialize(provider)
+      def initialize(account)
         danarchysys_config = DanarchySys::ConfigManager::Config.new
-        connection = danarchysys_config[:connections][provider.to_sym]
+        connection = danarchysys_config[:accounts][account.to_sym]
         @settings = danarchysys_config[:global_settings]
         @compute = Fog::Compute::OpenStack.new(connection)
         @instances = @compute.servers

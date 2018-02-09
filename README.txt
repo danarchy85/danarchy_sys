@@ -19,27 +19,32 @@ OpenStack Tenant ID: your_openstack_tenant_id
 Configuration has been saved!
 
 
-dAnarchySys config file follows a YAML format like this:
+dAnarchySys config file follows a JSON format like this:
 
-:connections:
-  :your_connection:
-    :openstack_auth_url: http://openstack-provider.com:5000/v2.0/tokens
-    :openstack_username: openstack_username
-    :openstack_api_key: openstack_api_key
-    :openstack_tenant: openstack_tenant
-:general_settings:
-  :ssh_key_path: PATH_TO_SSH_KEYS (this is filled in by default)
+{
+  "accounts": {
+    "your_account": {
+      "openstack_auth_url": "http://openstack-provider.com:5000/v2.0/tokens",
+      "openstack_username": "openstack_username",
+      "openstack_api_key": "openstack_api_key",
+      "openstack_tenant": "openstack_tenant"
+    },
+  },
+  "global_settings": {
+    "ssh_key_path": "/home/dan/.danarchy_sys/ssh"
+  }
+}
 
 # Once configuration finishes you will enter the main CLI for dAnarchy_sys.
 
 ## Usage
 
  ~ $ danarchy_sys
-OpenStack -> os_dreamcompute
+OpenStack -> danarchy_dreamcompute
 dAnarchy_sys main menu commands:
 Enter 'help' to view available commands or 'exit' to leave.
 1. instance: Instance Manager
-2.  keypair: Keypair Manager
+2.  keypair: Keypair Manager (Not yet implemented!)
 3.     help: Outputs commands for current the menu level
 4.     exit: Exit dAnarchy_sys
 command ~: instance

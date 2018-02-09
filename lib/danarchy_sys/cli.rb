@@ -7,13 +7,13 @@ module DanarchySys
   class CLI
     def initialize
       require_relative 'cli/menus'
-      require_relative 'cli/providers'
+      require_relative 'cli/accounts'
       require_relative 'cli/instance_manager'
       require_relative 'cli/keypair_manager'
 
-      provider = Providers.chooser
-      puts "OpenStack -> #{provider}"
-      @os_compute = DanarchySys::OpenStack::Compute.new provider
+      account = Accounts.chooser
+      puts "OpenStack -> #{account}"
+      @os_compute = DanarchySys::OpenStack::Compute.new account
       console
     end
 

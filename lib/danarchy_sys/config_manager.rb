@@ -1,5 +1,5 @@
 require 'fileutils'
-require 'yaml'
+require 'json'
 require_relative 'config_manager/openstack'
 
 # dAnarchy_sys config management
@@ -8,13 +8,13 @@ module DanarchySys
     class Config
       def self.new
         danarchysys_cfg_path = File.join(File.realpath(ENV['HOME']), '.danarchy_sys')
-        config_yml = File.join(danarchysys_cfg_path, 'danarchysys.yml')
+        config_json = File.join(danarchysys_cfg_path, 'danarchy_sys.json')
 
-        if File.exists?(config_yml)
-          return YAML.load_file(config_yml)
+        if File.exists?(config_json)
+          return JSON.parse(File.read(config_json), symbolize_names: true)
         else
           puts 'No existing configuration found!'
-          return new_config(danarchysys_cfg_path, config_yml)
+          return new_config(danarchysys_cfg_path, config_json)
         end
       end
       
@@ -27,11 +27,11 @@ module DanarchySys
           global_settings: {
             ssh_key_path: nil
           },
-          connections: {}
+          accounts: {}
         }
       end
 
-      def self.new_config(danarchysys_cfg_path, config_yml)
+      def self.new_config(danarchysys_cfg_path, config_json)
         config = config_template
         ssh_path = File.join(danarchysys_cfg_path, 'ssh')
 
@@ -68,8 +68,8 @@ module DanarchySys
             provider = gets.chomp
 
             if provider =~ /^[0-9]*$/
-              if num_providers.keys.include?(provider)
-                provider = num_providers[provider]
+              if num_providers.keys.include?(provider.to_i)
+                provider = num_providers[provider.to_i]
               else
                 print "#{provider} is not a valid Id. "
               end
@@ -80,28 +80,30 @@ module DanarchySys
             end
           end
         else
-          provider = providers[0]
+          provider = providers[0] # default to OpenStack
         end
 
-        if provider == 'openstack'
-          puts 'Creating a new OpenStack connection!'
-          print 'Enter a provider name for this connection: '
+        if provider == 'danarchy'
+          puts 'Need to implement setup for dAnarchy!'
+        elsif provider == 'openstack'
+          puts 'Adding a new OpenStack account!'
+          print 'Enter a provider name for this account: '
           provider = gets.chomp
-          cfg_os = DanarchySys::ConfigManager::OpenStack.new(provider, config)
-          config = cfg_os.new_connection_prompt
+          cfg_openstack = DanarchySys::ConfigManager::OpenStack.new(provider, config)
+          config = cfg_openstack.new_account_prompt
         elsif provider == 'aws'
           # Placeholder
           puts 'AWS not yet implemented!'
         end
 
-        save(config_yml, config)
-        puts "Configuration has been saved to #{config_yml}"
+        save(config_json, config)
+        puts "Configuration has been saved to #{config_json}"
         puts "Copy any existing #{provider} SSH keys to: #{ssh_path}"
         config
       end
 
       def self.save(config_file, param_hash)
-        File.write(config_file, param_hash.to_yaml)
+        File.write(config_file, JSON.pretty_generate(param_hash))
       end
 
 
