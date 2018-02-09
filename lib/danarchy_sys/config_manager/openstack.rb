@@ -3,11 +3,10 @@ module DanarchySys::ConfigManager
   class OpenStack
     def initialize(provider, config)
       (@provider, @config) = provider, config
-      return
     end
     
-    def add_connection(provider, openstack_auth_url, openstack_username, openstack_api_key, openstack_tenant)
-      @config[:connections][provider.to_sym] = {
+    def add_account(provider, openstack_auth_url, openstack_username, openstack_api_key, openstack_tenant)
+      @config[:accounts][provider.to_sym] = {
         openstack_auth_url: openstack_auth_url,
         openstack_username: openstack_username,
         openstack_api_key: openstack_api_key,
@@ -15,14 +14,14 @@ module DanarchySys::ConfigManager
       }
     end
 
-    def delete_connection
+    def delete_account
       config = load
       config.delete(@provider)
     end
 
     def add_setting(name, value)
       config = load
-      # probably need to check if :settings exist first
+      config[@provider][:settings] = {} if !config[@provider][:settings]
       config[@provider][:settings][name.to_sym] = value
     end
 
@@ -32,11 +31,11 @@ module DanarchySys::ConfigManager
       config[@provider][:settings].delete(name.to_sym)
     end
 
-    def verify_connection
+    def verify_account
       
     end
 
-    def new_connection_prompt
+    def new_account_prompt
       print "OpenStack Auth URL\t(Example: http://openstack-host.com:5000/v2.0/tokens)\nEnter URL: "
       openstack_auth_url = gets.chomp
       print 'OpenStack Username: '
@@ -46,7 +45,7 @@ module DanarchySys::ConfigManager
       print 'OpenStack Tenant ID: '
       openstack_tenant = gets.chomp
 
-      add_connection(@provider, openstack_auth_url, openstack_username, openstack_api_key, openstack_tenant)
+      add_account(@provider, openstack_auth_url, openstack_username, openstack_api_key, openstack_tenant)
       @config
     end
   end  
