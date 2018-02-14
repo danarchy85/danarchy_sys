@@ -7,7 +7,7 @@ class ComputeKeypairs
   end
 
   def pemfile_path(keypair_name)
-    "#{@settings[:ssh_key_path]}/fog_#{keypair_name}.pem"
+    "#{@settings[:ssh_key_path]}/#{keypair_name}.pem"
   end
 
   def pemfile_check(pemfile)
