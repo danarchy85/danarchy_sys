@@ -1,12 +1,12 @@
 
 # CLI Prompt to create a new instance
 class PromptsCreateInstance
-  def self.create_instance(os_compute, instance_name)
-    comp_inst = os_compute.instances
-    comp_imgs = os_compute.images
-    comp_flvs = os_compute.flavors
-    comp_keys = os_compute.keypairs
+  def initialize(os_compute, settings)
+    @os_compute = os_compute
+    @settings = settings
+  end
 
+  def create_instance(instance_name)
     # Prompt for and check that instance_name is unused
     if instance_name == nil
       print "\nWhat should we name the instance?: "
@@ -14,7 +14,7 @@ class PromptsCreateInstance
     end
 
     # Make sure instance_name isn't already in use
-    until comp_inst.check_instance(instance_name) == false
+    until @os_compute.instances.check_instance(instance_name) == false
       print "\n#{instance_name} already exists! Try another name: "
       instance_name = gets.chomp
     end
@@ -23,46 +23,56 @@ class PromptsCreateInstance
 
     # Prompt for image
     puts "\nSelect an image (operating system) for #{instance_name}"
-    image = PromptsCreateInstance.image(comp_imgs)
+    image = self.image
 
     # Prompt for flavor
     puts "\nSelect a flavor (instance size) for #{instance_name}"
-    flavor = PromptsCreateInstance.flavor(comp_flvs)
+    flavor = self.flavor
 
     # Prompt for keypair
     puts "\nSelect a keypair (SSH key) for #{instance_name}"
-    keypair = PromptsCreateInstance.keypair(comp_keys)
+    keypair = self.keypair
+
+    # Prompt for userdata
+    print "\nEnter a path to userdata for #{instance_name} or leave blank for no userdata: "
+    file, userdata = self.userdata
 
     # Print summary and prompt to continue
+    puts "\n================= Instance Summary ==================="
     puts "\nInstance Name: #{instance_name}"
     puts "        Linux: #{image.name}"
     puts "Instance Size: #{flavor.name}"
     puts "      Keypair: #{keypair.name}"
-
+    puts "     UserData: #{file}"
+    puts "\n --- UserData --- \n#{userdata}\n --- End UserData ---\n" if userdata
+    puts "\n=============== End Instance Summary ================="
     print 'Should we continue with creating the instance? (Y/N): '
     instance = nil
     continue = gets.chomp
 
     if continue =~ /^y(es)?$/i
       puts "Creating instance: #{instance_name}"
-      instance = comp_inst.create_instance(instance_name, image.id, flavor.id, keypair.name)
+      instance = @os_compute.instances.create_instance(instance_name, image.id, flavor.id, keypair.name, userdata)
     else
-      puts "Abandoning creation of #{instance_name}"
-      return false
+      puts "Abandoning creation of #{instance_name}! Returning to chooser."
+      instance = nil
     end
 
-    instance_check = comp_inst.check_instance(instance_name)
-
-    if instance_check == true
+    instance_check = instance ? @os_compute.instances.check_instance(instance_name) : false
+    if !instance
+      return false
+    elsif instance_check == true
       puts "Instance #{instance.name} is ready!"
       return instance
-    else
-      raise "Error: Could not create instance: #{instance_name}" if instance_check == false
+    elsif instance_check == false
+      puts "Error: Could not create instance: #{instance_name}"
     end
+
+    instance
   end
 
-  def self.image(comp_imgs)
-    images_numbered = Helpers.array_to_numhash(comp_imgs.all_images)
+  def image
+    images_numbered = Helpers.array_to_numhash(@os_compute.images.all_images)
 
     # List available images in a numbered hash.
     puts "\nAvailable Images:"
@@ -74,11 +84,11 @@ class PromptsCreateInstance
 
     image_name = item_chooser(images_numbered, 'image')
     print "Image Name: #{image_name}\n"
-    comp_imgs.get_image_by_name(image_name)
+    @os_compute.images.get_image_by_name(image_name)
   end
 
-  def self.flavor(comp_flvs)
-    flavors_numbered = Helpers.array_to_numhash(comp_flvs.all_flavors.sort_by(&:ram))
+  def flavor
+    flavors_numbered = Helpers.array_to_numhash(@os_compute.flavors.all_flavors.sort_by(&:ram))
 
     puts "\nAvailable Instance Flavors:"
     puts sprintf("%0s %-15s %-10s %-10s %0s", 'Id', 'Name', 'RAM', 'VCPUs', 'Disk')
@@ -89,11 +99,11 @@ class PromptsCreateInstance
 
     flavor_name = item_chooser(flavors_numbered, 'flavor')
     print "Flavor Name: #{flavor_name.split('.')[1]}\n"
-    comp_flvs.get_flavor_by_name(flavor_name)
+    @os_compute.flavors.get_flavor_by_name(flavor_name)
   end
 
-  def self.keypair(comp_keys)
-    keypairs = Helpers.objects_to_numhash(comp_keys.all_keypairs)
+  def keypair
+    keypairs = Helpers.objects_to_numhash(@os_compute.keypairs.all_keypairs)
     keypair_name = nil
 
     # List available keypairs
@@ -130,18 +140,40 @@ Should we create a new keypair named #{keypair_name}? (Y/N): "
 
         if gets.chomp =~ /^y(es)?$/i
           puts "Creating keypair: #{keypair_name}!"
-          return comp_keys.create_keypair(keypair_name)
+          return @os_compute.keypairs.create_keypair(keypair_name)
         else
           print 'Please enter an option from above: '
         end
       end
     end
 
-    comp_keys.get_keypair(keypair_name)
+    @os_compute.keypairs.get_keypair(keypair_name)
+  end
+
+  def userdata
+    userdata = nil
+    file = gets.chomp
+
+    return ['-- no userdata --', nil] if file.empty?
+    file = File.expand_path(file)
+    userdata = File.exist?(file) ? File.read(file) : ''
+    if userdata.empty?
+      print 'File is empty!'
+      userdata = editor(file)
+    else
+      puts userdata + "\n\n"
+      print "Do any changes need to be made to '#{file}'? (Y/N): "
+
+      if gets.chomp =~ /^y(es)?$/i
+        userdata = editor(file)
+      end
+    end
+
+    return [file, userdata]
   end
 
   private
-  def self.item_chooser(items_numbered, item)
+  def item_chooser(items_numbered, item)
     # Loop input until existing object is selected
     item_name = nil
     print "Which #{item} should we use for this instance?: "
@@ -162,5 +194,16 @@ Should we create a new keypair named #{keypair_name}? (Y/N): "
       print "#{item_name} is not a valid item. Please enter an option from above: " if item_check == false
     end
     item_name
+  end
+
+  def editor(file)
+    require 'fileutils'
+    FileUtils.cp(file, "#{file}.bkp")
+    editor = ENV['EDITOR'] || '/bin/nano'
+    puts "Opening #{file} in #{File.basename(editor)}"
+    sleep(2)
+    system("#{editor} #{file}")
+    puts "Backed up #{file} to #{file}.bkp"
+    File.read(file)
   end
 end

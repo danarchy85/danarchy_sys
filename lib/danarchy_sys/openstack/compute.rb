@@ -6,10 +6,8 @@ require_relative 'compute/flavors'
 module DanarchySys
   module OpenStack
     class Compute
-      def initialize(account)
-        danarchysys_config = DanarchySys::ConfigManager::Config.new
-        connection = danarchysys_config[:accounts][account.to_sym]
-        @settings = danarchysys_config[:global_settings]
+      def initialize(connection, settings)
+        @settings = settings
         @compute = Fog::Compute::OpenStack.new(connection)
         @instances = @compute.servers
         @images = @compute.images(filters: {'status' => ['ACTIVE']})
@@ -53,6 +51,7 @@ module DanarchySys
         ssh, user = nil
         if image == nil
           puts "Image not found for #{instance.name}! This instance needs to be rebuild with a current image."
+          puts "Attempting to determine the correct username and log in..."
           ssh, user = fallback_ssh(ipv4, pemfile)
         else
           user = 'ubuntu' if image.name =~ /ubuntu/i
@@ -64,25 +63,26 @@ module DanarchySys
 
         return if !user
 
-        puts "Connecting as user: #{user} @ #{ipv4}"
-        connect = "/usr/bin/ssh -i '#{pemfile}' #{user}@#{ipv4}"
+        print "Connecting as user: #{user} @ #{ipv4} " + cmd + "\n"
+        connect = "/usr/bin/ssh -o ConnectTimeout=15 -o StrictHostKeyChecking=no -o PasswordAuthentication=no -i '#{pemfile}' #{user}@#{ipv4}"
         system(connect)
       end
 
       def fallback_ssh(ipv4, pemfile)
-        users = %w[centos ubuntu debian fedora core]
+        users = %w[debian ubuntu centos fedora core]
         ssh, user = nil
 
         users.each do |username|
           print "Attempting connection as user: #{username} @ #{ipv4} => "
-          connect = "/usr/bin/ssh -i '#{pemfile}' #{username}@#{ipv4}"
+          connect = "/usr/bin/ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o PasswordAuthentication=no -i '#{pemfile}' #{username}@#{ipv4}"
           ssh = system("#{connect} 'uptime' &>/dev/null")
-          puts 'failed' if ssh ==false
 
           if ssh == true
             puts 'success'
             user = username
             break
+          else
+            puts 'failed'
           end
         end
 
