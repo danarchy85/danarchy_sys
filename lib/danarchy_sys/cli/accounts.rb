@@ -1,7 +1,6 @@
 
 class Accounts
-  def self.chooser
-    danarchysys_config = DanarchySys::ConfigManager::Config.new
+  def self.chooser(danarchysys_config)
     accounts = Helpers.array_to_numhash(danarchysys_config[:accounts].keys)
     account = 'nil'
 

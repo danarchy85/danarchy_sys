@@ -91,8 +91,8 @@ class ComputeInstances
     instance.stop
   end
 
-  def create_instance(instance_name, image_id, flavor_id, keypair_name, *user_data)
-    user_data = nil if user_data.empty?
+  def create_instance(instance_name, image_id, flavor_id, keypair_name, *userdata)
+    user_data = userdata ? userdata.first : nil
 
     instance = @compute.servers.create(name: instance_name,
                                       image_ref: image_id,
@@ -116,9 +116,9 @@ class ComputeInstances
     instance.rebuild(image.id, instance.name)
     addrs = [get_public_addresses(instance),
              get_private_addresses(instance)].flatten.compact!
-    addrs.each { |addr| system("ssh-keygen -R #{addr}") }
+    addrs.each { |addr| system("ssh-keygen -R #{addr} &>/dev/null") }
 
-    instance.wait_for { ready? }
+    # instance.wait_for { ready? }
     instance
   end
 
@@ -138,7 +138,7 @@ class ComputeInstances
 
     addrs = [get_public_addresses(instance),
              get_private_addresses(instance)].flatten.compact!
-    addrs.each { |addr| system("ssh-keygen -R #{addr}") }
+    addrs.each { |addr| system("ssh-keygen -R #{addr} &>/dev/null") }
 
     return true
   end

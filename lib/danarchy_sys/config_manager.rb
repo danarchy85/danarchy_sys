@@ -1,13 +1,13 @@
+require_relative 'config_manager/openstack'
 require 'fileutils'
 require 'json'
-require_relative 'config_manager/openstack'
 
 # dAnarchy_sys config management
 module DanarchySys
   module ConfigManager
     class Config
       def self.new
-        danarchysys_cfg_path = File.join(File.realpath(ENV['HOME']), '.danarchy_sys')
+        danarchysys_cfg_path = File.join(File.realpath(ENV['HOME']), '.danarchy', 'danarchy_sys')
         config_json = File.join(danarchysys_cfg_path, 'danarchy_sys.json')
 
         if File.exists?(config_json)
@@ -19,7 +19,7 @@ module DanarchySys
       end
       
       def self.providers
-        ['openstack'] # , 'aws']
+        ['openstack', 'danarchy'] # , 'aws']
       end
 
       def self.config_template

@@ -1,6 +1,6 @@
 
-require 'optparse'
-require 'fog/openstack'
+# require 'optparse'
+# require 'fog/openstack'
 require_relative '../danarchy_sys'
 
 module DanarchySys
@@ -11,24 +11,13 @@ module DanarchySys
       require_relative 'cli/instance_manager'
       require_relative 'cli/keypair_manager'
 
-      account = Accounts.chooser
+      danarchysys_config = DanarchySys::ConfigManager::Config.new
+      account = Accounts.chooser(danarchysys_config)
+      connection = danarchysys_config[:accounts][account]
       puts "OpenStack -> #{account}"
-      @os_compute = DanarchySys::OpenStack::Compute.new account
+      @settings   = danarchysys_config[:global_settings]
+      @os_compute = DanarchySys::OpenStack::Compute.new(connection, @settings)
       console
-    end
-
-    def instance_chooser
-      inst_mgr = InstanceManager.new(@os_compute)
-      instance = inst_mgr.chooser(@os_compute)
-
-      until instance != false
-        puts "\nReturning to Instance Chooser"
-        instance = inst_mgr.chooser(@os_compute)
-      end
-
-      menus('main')
-      puts "\nWorking with: #{instance.name}\tStatus: #{instance.state}"
-      console(instance.name)
     end
 
     def console
@@ -45,7 +34,7 @@ module DanarchySys
         end
 
         if cmd == 'instance'
-          InstanceManager.manager(@os_compute)
+          InstanceManager.manager(@os_compute, @settings)
         elsif cmd == 'keypair'
           KeypairManager.manager(@os_compute)
         elsif cmd == 'help'
