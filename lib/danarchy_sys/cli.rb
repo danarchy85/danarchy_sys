@@ -1,6 +1,4 @@
 
-# require 'optparse'
-# require 'fog/openstack'
 require_relative '../danarchy_sys'
 
 module DanarchySys
