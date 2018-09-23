@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require_relative '../lib/danarchy_sys'
 require_relative '../lib/danarchy_sys/cli'
 
 DanarchySys::CLI.new

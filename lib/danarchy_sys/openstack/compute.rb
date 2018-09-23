@@ -2,6 +2,7 @@ require_relative 'compute/instances'
 require_relative 'compute/keypairs'
 require_relative 'compute/images'
 require_relative 'compute/flavors'
+require 'shellwords'
 
 module DanarchySys
   module OpenStack
@@ -34,19 +35,17 @@ module DanarchySys
         ComputeSecgroups.new(@compute)
       end
 
-      def ssh(instance_name)
-        (comp_inst, comp_kp, comp_img) = instances, keypairs, images
-        instance = comp_inst.get_instance(instance_name)
-        keypair_name = instance.key_name
-        pemfile = comp_kp.pemfile_path(keypair_name)
-        
-        addrs = comp_inst.get_public_addresses(instance_name)
-        ipv4 = addrs.grep(/\./).first
-        ipv6 = addrs.grep(/:/).first
+      def ssh(instance, *cmd)
+        instance = instances.get_instance(instance) if instance.class == String
+        opts = { quiet: true }
+        opts[:command] = cmd ? cmd.shift : nil
+        pemfile = keypairs.pemfile_path(instance.key_name)
+        addrs = instances.get_public_addresses(instance)
+        # (instances, keypairs, images) = instances, keypairs, images
+        # instance = instances.get_instance(instance)
 
         # Define user by image_id
-        image_id = instance.image['id']
-        image = comp_img.get_image_by_id(image_id)
+        image = images.get_image_by_id(instance.image['id'])
 
         ssh, user = nil
         if image == nil
@@ -63,12 +62,16 @@ module DanarchySys
 
         return if !user
 
-        print "Connecting as user: #{user} @ #{ipv4} " + cmd + "\n"
-        connect = "/usr/bin/ssh -o ConnectTimeout=15 -o StrictHostKeyChecking=no -o PasswordAuthentication=no -i '#{pemfile}' #{user}@#{ipv4}"
-        system(connect)
+        connector = { ipv4: addrs.grep(/\./).first,
+                      ipv6: addrs.grep(/:/).first,
+                      ssh_user: user,
+                      ssh_key: pemfile }
+
+        SSH.new(connector, opts)
       end
 
       def fallback_ssh(ipv4, pemfile)
+        # This needs some updating to utilize the SSH module as above.
         users = %w[debian ubuntu centos fedora core]
         ssh, user = nil
 

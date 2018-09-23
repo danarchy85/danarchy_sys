@@ -1,14 +1,11 @@
-
-require_relative '../danarchy_sys'
+require_relative 'cli/menus'
+require_relative 'cli/accounts'
+require_relative 'cli/instance_manager'
+require_relative 'cli/keypair_manager'
 
 module DanarchySys
   class CLI
     def initialize
-      require_relative 'cli/menus'
-      require_relative 'cli/accounts'
-      require_relative 'cli/instance_manager'
-      require_relative 'cli/keypair_manager'
-
       danarchysys_config = DanarchySys::ConfigManager::Config.new
       account = Accounts.chooser(danarchysys_config)
       connection = danarchysys_config[:accounts][account]
