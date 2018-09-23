@@ -46,7 +46,11 @@ class InstanceManager
         end
       elsif cmd == 'status'
         instance = @os_compute.instances.get_instance(instance.name)
-        printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+        if instance.state == 'ACTIVE' && @os_compute.ssh(instance, 'uptime')[:stderr]
+          printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', 'WAITING')
+        else
+          printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+        end
       elsif %w(pause unpause suspend resume start stop).include?(cmd.to_s)
         status = instance.state
 
@@ -74,15 +78,14 @@ class InstanceManager
         print "Should we rebuild #{instance.name} with image: #{image.name}? (Y/N): "
         if gets.chomp =~ /^y(es)?$/i
           puts "Rebuilding #{instance.name} with #{image.name}"
-          @os_compute.instances.rebuild_instance(instance, image)
-          instance = @os_compute.instances.get_instance(instance.name)
+          instance = @os_compute.instances.rebuild_instance(instance, image)
           puts "\nRebuild in progress!"
         else
           puts "Not rebuilding #{instance.name} at this time."
         end
       elsif cmd == 'connect'
         if instance.state == 'ACTIVE'
-          @os_compute.ssh(instance.name)          
+          @os_compute.ssh(instance.name)
         else
           puts "Unable to connect: #{instance.name} is not running!"
         end

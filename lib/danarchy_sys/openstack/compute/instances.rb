@@ -110,18 +110,6 @@ class ComputeInstances
     instance
   end
 
-  def rebuild_instance(instance, image)
-    instance = get_instance(instance) if instance.class == String
-
-    instance.rebuild(image.id, instance.name)
-    addrs = [get_public_addresses(instance),
-             get_private_addresses(instance)].flatten.compact!
-    addrs.each { |addr| system("ssh-keygen -R #{addr} &>/dev/null") }
-
-    # instance.wait_for { ready? }
-    instance
-  end
-
   def delete_instance(instance)
     instance = get_instance(instance) if instance.class == String    
     return 1 if instance == false
@@ -141,5 +129,25 @@ class ComputeInstances
     addrs.each { |addr| system("ssh-keygen -R #{addr} &>/dev/null") }
 
     return true
+  end
+
+  def rebuild_instance(instance, image)
+    instance = get_instance(instance) if instance.class == String
+
+    instance.rebuild(image.id, instance.name)
+    addrs = [get_public_addresses(instance),
+             get_private_addresses(instance)].flatten.compact!
+    addrs.each { |addr| system("ssh-keygen -R #{addr} &>/dev/null") }
+
+    # instance.wait_for { ready? }
+    get_instance(instance.name)
+  end
+
+  def ssh_connector(instance)
+    addrs = get_public_addresses(instance.name)
+    { ipv4: addrs.grep(/\./).first,
+      ipv6: addrs.grep(/:/).first,
+      ssh_user: user,
+      ssh_key: pemfile }
   end
 end
