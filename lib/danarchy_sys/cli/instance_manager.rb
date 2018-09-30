@@ -121,13 +121,13 @@ class InstanceManager
 
     until instances_numhash.values.collect{|i| i[:name]}.include?(instance_name)
       instance_name = gets
+      instance_name = instance_name ? instance_name.chomp : abort('Exiting!')
 
       until instance_name.empty? == false
         print 'Input was blank! Enter an instance or Id from above: '
         instance_name = gets.chomp
       end
 
-      instance_name = instance_name ? instance_name.chomp : abort('Exiting!')
       abort('Exiting') if instance_name == 'exit'
       return 'main' if instance_name == 'main'
 
