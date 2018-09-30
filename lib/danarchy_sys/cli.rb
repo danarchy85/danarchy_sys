@@ -21,9 +21,9 @@ module DanarchySys
 
       loop do
         print 'command ~: '
-        cmd = gets.chomp
+        cmd = gets
+        cmd = cmd ? cmd.chomp : abort('Exiting!')
 
-        next if cmd.empty?
         if cmd =~ /^[0-9]*$/
           menu[cmd.to_i].map { |k, v| cmd = k } if menu.keys.include? cmd.to_i
         end

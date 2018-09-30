@@ -37,64 +37,55 @@ module DanarchySys
 
       def ssh(instance, *cmd)
         instance = instances.get_instance(instance) if instance.class == String
-        opts = { quiet: true }
-        opts[:command] = cmd ? cmd.shift : nil
         pemfile = keypairs.pemfile_path(instance.key_name)
         addrs = instances.get_public_addresses(instance)
-        # (instances, keypairs, images) = instances, keypairs, images
-        # instance = instances.get_instance(instance)
 
+        opts = { quiet: true }
+        opts[:command] = cmd ? cmd.shift : nil
+        connector = { ipv4: addrs.grep(/\./).first,
+                      ipv6: addrs.grep(/:/).first,
+                      ssh_key: pemfile,
+                      ssh_user: nil }
         # Define user by image_id
         image = images.get_image_by_id(instance.image['id'])
-
-        ssh, user = nil
         if image == nil
           puts "Image not found for #{instance.name}! This instance needs to be rebuild with a current image."
           puts "Attempting to determine the correct username and log in..."
-          ssh, user = fallback_ssh(ipv4, pemfile)
+          connector = fallback_ssh(connector)
         else
-          user = 'ubuntu' if image.name =~ /ubuntu/i
-          user = 'debian' if image.name =~ /debian/i
-          user = 'centos' if image.name =~ /centos/i
-          user = 'fedora' if image.name =~ /fedora/i
-          user = 'core'   if image.name =~ /coreos/i
+          connector[:ssh_user] = 'gentoo' if image.name =~ /gentoo/i
+          connector[:ssh_user] = 'ubuntu' if image.name =~ /ubuntu/i
+          connector[:ssh_user] = 'debian' if image.name =~ /debian/i
+          connector[:ssh_user] = 'centos' if image.name =~ /centos/i
+          connector[:ssh_user] = 'fedora' if image.name =~ /fedora/i
+          connector[:ssh_user] = 'core'   if image.name =~ /coreos/i
         end
 
-        return if !user
-
-        connector = { ipv4: addrs.grep(/\./).first,
-                      ipv6: addrs.grep(/:/).first,
-                      ssh_user: user,
-                      ssh_key: pemfile }
-
+        return if ! connector[:ssh_user]
         SSH.new(connector, opts)
       end
 
-      def fallback_ssh(ipv4, pemfile)
-        # This needs some updating to utilize the SSH module as above.
-        users = %w[debian ubuntu centos fedora core]
-        ssh, user = nil
+      def fallback_ssh(connector)
+        users = %w[gentoo debian ubuntu centos fedora core]
+        fb_opts = { quiet: true, command: 'uptime' }
 
         users.each do |username|
-          print "Attempting connection as user: #{username} @ #{ipv4} => "
-          connect = "/usr/bin/ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o PasswordAuthentication=no -i '#{pemfile}' #{username}@#{ipv4}"
-          ssh = system("#{connect} 'uptime' &>/dev/null")
+          connector[:ssh_user] = username
+          print 'Attempting connection as user: '
+          print connector[:ssh_user], ' @ ', connector[:ipv4], ' => '
+          fallback_result = SSH.new(connector, fb_opts)
 
-          if ssh == true
+          if fallback_result[:stdout]
             puts 'success'
-            user = username
             break
           else
             puts 'failed'
+            connector[:ssh_user] = nil
           end
         end
 
-        if ssh == false
-          puts 'Unable to connect! User unknown or SSHd is not running on the instance.' 
-          return ssh, nil
-        else
-          return [ssh, user]
-        end
+        puts 'Unable to determine user or SSHd is not running!' if ! connector[:ssh_user]
+        connector
       end
     end
   end
