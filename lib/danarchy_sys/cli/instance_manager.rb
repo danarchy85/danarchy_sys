@@ -18,9 +18,8 @@ class InstanceManager
       end
 
       print "#{instance.name} ~: " if instance
-      cmd = gets.chomp
-
-      next if cmd.empty?
+      cmd = gets
+      cmd = cmd ? cmd.chomp : abort('Exiting!')
       abort('Exiting!') if cmd == 'exit'
 
       if cmd =~ /^[0-9]*$/
@@ -46,7 +45,8 @@ class InstanceManager
         end
       elsif cmd == 'status'
         instance = @os_compute.instances.get_instance(instance.name)
-        if instance.state == 'ACTIVE' && @os_compute.ssh(instance, 'uptime')[:stderr]
+        uptime_result = @os_compute.ssh(instance, 'uptime')
+        if instance.state == 'ACTIVE' && uptime_result[:stderr]
           printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', 'WAITING')
         else
           printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
@@ -120,13 +120,14 @@ class InstanceManager
     print 'Enter an instance to manage or enter a name for a new instance: '
 
     until instances_numhash.values.collect{|i| i[:name]}.include?(instance_name)
-      instance_name = gets.chomp
+      instance_name = gets
 
       until instance_name.empty? == false
         print 'Input was blank! Enter an instance or Id from above: '
         instance_name = gets.chomp
       end
 
+      instance_name = instance_name ? instance_name.chomp : abort('Exiting!')
       abort('Exiting') if instance_name == 'exit'
       return 'main' if instance_name == 'main'
 

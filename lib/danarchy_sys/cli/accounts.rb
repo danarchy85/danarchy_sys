@@ -17,9 +17,8 @@ class Accounts
 
     until accounts.values.include?(account)
       print 'Which account should we use? (enter \'exit\' to leave): '
-      account = gets.chomp
-
-      abort('Exiting') if account == 'exit'
+      account = gets
+      account = account ? account.chomp : abort('Exiting!')
 
       if account =~ /^[0-9]*$/
         account = accounts[account.to_i]
