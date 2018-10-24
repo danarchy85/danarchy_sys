@@ -9,7 +9,7 @@ module DanarchySys
     class Compute
       def initialize(connection, settings)
         @settings = settings
-        @compute = Fog::Compute::OpenStack.new(connection)
+        @compute = Fog::OpenStack::Compute.new(connection)
         @instances = @compute.servers
         @images = @compute.images(filters: {'status' => ['ACTIVE']})
         @flavors = @compute.flavors
