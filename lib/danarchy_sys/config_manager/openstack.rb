@@ -36,7 +36,7 @@ module DanarchySys::ConfigManager
     end
 
     def new_account_prompt
-      print "OpenStack Auth URL\t(Example: http://openstack-host.com:5000/v2.0/tokens)\nEnter URL: "
+      print "OpenStack Auth URL\t(Example: http://openstack-host.com:5000/v2.0)\nEnter URL: "
       openstack_auth_url = gets.chomp
       print 'OpenStack Username: '
       openstack_username = gets.chomp
