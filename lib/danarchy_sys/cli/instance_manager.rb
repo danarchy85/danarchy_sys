@@ -45,14 +45,12 @@ class InstanceManager
         end
       elsif cmd == 'status'
         instance = @os_compute.instances.get_instance(instance.name)
-        if instance.state == 'ACTIVE'
-          uptime_result = @os_compute.ssh(instance, 'uptime')
-
-          if uptime_result[:stderr]
-            printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', 'WAITING')
-          else
-            printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
-          end
+        if instance.state != 'ACTIVE'
+          printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
+        elsif @os_compute.ssh(instance, 'uptime')[:stderr]
+          printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', 'WAITING')
+        else
+          printf("%#{instance.name.size}s %0s %0s\n", instance.name, ' => ', instance.state)
         end
       elsif %w(pause unpause suspend resume start stop).include?(cmd.to_s)
         status = instance.state
