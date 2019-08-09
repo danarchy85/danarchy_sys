@@ -1,29 +1,28 @@
 
 # OpenStack Instance Management
 class ComputeInstances
-  def initialize(compute, instances, settings)
+  def initialize(compute, settings)
     @compute = compute
-    @instances = instances
     @settings = settings
   end
   
   def all_instances(*filter)
     filter = filter.shift || {}
-    @instances = @compute.servers(filters: filter)
+    @compute.servers(filters: filter)
   end
 
   def list_all_instances
-    @instances.collect { |i| i.name }
+    all_instances.collect { |i| i.name }
   end
 
   def list_active_instances
-    @instances.collect do |i|
+    all_instances.collect do |i|
       i.name if i.state == 'ACTIVE'
     end.compact!
   end
 
   def check_instance(instance_name)
-    return false if instance_name == nil || instance_name.empty? == true
+    return false if instance_name == nil || instance_name.empty?
     return true if get_instance(instance_name)
     false
   end
@@ -32,6 +31,12 @@ class ComputeInstances
     instance = all_instances({ 'name' => [instance_name] })
     return false if !instance.first
     return false if !instance.collect{ |i| i.name }.include?(instance_name)
+
+    if instance.count > 1
+      puts " ! Warning: Multiple instances found matching #{instance_name}!"
+      puts "     Using: #{instance.first.id} => #{instance.name}"
+    end
+
     instance.first
   end
 
@@ -91,21 +96,21 @@ class ComputeInstances
     instance.stop
   end
 
-  def create_instance(instance_name, image_id, flavor_id, keypair_name, *userdata)
-    user_data = userdata ? userdata.first : nil
+  def create_instance(instance_name, image_id, flavor_id, keypair_name, opts = {})
+    # opts = {nics: [{:net_id=>"NetworkID"}], user_data: "#!/bin/bash\n Shell Content"
+    nics = opts[:nics] ? opts[:nics] : nil
+    user_data = opts[:user_data] ? opts[:user_data] : nil
 
-    instance = @compute.servers.create(name: instance_name,
-                                      image_ref: image_id,
+    instance = @compute.servers.create(name:      instance_name,
+                                      image_ref:  image_id,
                                       flavor_ref: flavor_id,
-                                      key_name: keypair_name,
-                                      user_data: user_data)
+                                      key_name:   keypair_name,
+                                      nics:       opts[:nics] ? opts[:nics] : nil,
+                                      user_data:  opts[:user_data] ? opts[:user_data] : nil)
     
     # add security_group
     # add volumes
-    # handle user_data with base64 encoding
 
-    # Put error handling from instance_prompts here
-    
     instance.wait_for { ready? }
     instance
   end

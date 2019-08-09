@@ -12,6 +12,7 @@ module DanarchySys
       puts "OpenStack -> #{account}"
       @settings   = danarchysys_config[:global_settings]
       @os_compute = DanarchySys::OpenStack::Compute.new(connection, @settings)
+      @os_network = DanarchySys::OpenStack::Networking.new(connection, @settings)
       console
     end
 
@@ -25,11 +26,11 @@ module DanarchySys
         cmd = cmd ? cmd.chomp : abort('Exiting!')
 
         if cmd =~ /^[0-9]*$/
-          menu[cmd.to_i].map { |k, v| cmd = k } if menu.keys.include? cmd.to_i
+          cmd = menu[cmd.to_i] ? menu[cmd.to_i].keys.first : nil
         end
 
         if cmd == 'instance'
-          InstanceManager.manager(@os_compute, @settings)
+          InstanceManager.manager(@os_compute, @os_network, @settings)
         elsif cmd == 'keypair'
           KeypairManager.manager(@os_compute)
         elsif cmd == 'help'

@@ -10,7 +10,7 @@ class KeypairManager
 
     loop do
       while keypair == false
-        keypair = chooser(os_compute)
+        keypair = chooser(comp_kp)
         return Menus.print_menu('main') if keypair == 'main'
 
         if keypair == 'keypair'
@@ -20,13 +20,13 @@ class KeypairManager
       end
       
       print "#{keypair.name} ~: " if keypair
-      cmd = gets.chomp
-
+      cmd = gets
+      cmd = cmd ? cmd.chomp : abort('Exiting!')
       next if cmd.empty?
       abort('Exiting!') if cmd == 'exit'
       
       if cmd =~ /^[0-9]*$/
-        menu[cmd.to_i].map { |k, v| cmd = k } if menu.keys.include? cmd.to_i
+        cmd = menu[cmd.to_i] ? menu[cmd.to_i].keys.first : nil
       end
 
       if cmd == 'help'
@@ -36,7 +36,7 @@ class KeypairManager
       elsif cmd == 'info'
         KeypairStatus.single_keypair(keypair)
       elsif cmd == 'chooser'
-        keypair = chooser(os_compute)
+        keypair = chooser(comp_kp)
       elsif cmd == 'create'
         print 'Enter a new keypair name: '
         keypair_name = gets.chomp
@@ -49,7 +49,7 @@ class KeypairManager
         delete = comp_kp.delete_keypair(keypair.name) if gets.chomp =~ /^y(es)?$/i
         if delete == true
           puts "#{keypair.name} has been deleted! Returning to the keypair chooser."
-          keypair = chooser(os_compute)
+          keypair = chooser(comp_kp)
         else
           puts "#{keypair.name} was not deleted!"
         end
@@ -62,10 +62,9 @@ class KeypairManager
     end
   end
 
-  def self.chooser(os_compute)
-    comp_kp = os_compute.keypairs
+  def self.chooser(comp_kp)
     keypairs = comp_kp.list_keypairs
-    keypair_numhash = Helpers.array_to_numhash(keypairs)
+    keypair_numhash = Helpers.objects_to_numarray(keypairs)
     keypair_name = 'nil'
     keypair = 'nil'
 
@@ -88,7 +87,8 @@ class KeypairManager
     print 'Enter an keypair to manage or enter a name for a new keypair: '
 
     until keypairs.include?(keypair_name)
-      keypair_name = gets.chomp
+      keypair_name = gets
+      keypair_name = keypair_name ? keypair_name.chomp : abort('Exiting!')
 
       until keypair_name.empty? == false
         print 'Input was blank! Enter an keypair or Id from above: '

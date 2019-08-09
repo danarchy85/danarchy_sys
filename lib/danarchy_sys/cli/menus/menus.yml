@@ -1,0 +1,25 @@
+---
+main:
+  instance: Manage Instances
+  keypair: Manage SSH Keypairs
+  # secgroup: Manage Security Groups (Not yet implemented)
+  # network: Manage Networks, Routers, and Subnets (Not yet implemented)
+  # volume: Manage Volumes (Not yet implemented)
+  help: Outputs commands for current the menu level
+  exit: Exit dAnarchy_sys
+instance:
+  status: Current running status of instance
+  connect: Connect to instance through SSH
+  start: Start a currently stopped instance
+  stop: Stop a currently running instance
+  pause: Pause instance (to RAM)
+  unpause: Unpause instance from paused state
+  suspend: Suspend Instance (to disk)
+  resume: Resume instance from suspended state
+  rebuild: Rebuilds instance with a chosen image
+  create: Create a new instance
+  delete: Delete this instance
+keypair:
+  info: View information about this keypair
+  create: Create a new keypair
+  delete: Delete an existing keypair

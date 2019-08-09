@@ -1,8 +1,9 @@
 
 # CLI Prompt to create a new instance
 class PromptsCreateInstance
-  def initialize(os_compute, settings)
+  def initialize(os_compute, os_network, settings)
     @os_compute = os_compute
+    @os_network = os_network
     @settings = settings
   end
 
@@ -33,6 +34,10 @@ class PromptsCreateInstance
     puts "\nSelect a keypair (SSH key) for #{instance_name}"
     keypair = self.keypair
 
+    # Prompt for Network
+    puts "\nSelect one or more networks for #{instance_name}."
+    network = self.network
+
     # Prompt for userdata
     print "\nEnter a path to userdata for #{instance_name} or leave blank for no userdata: "
     file, userdata = self.userdata
@@ -41,8 +46,9 @@ class PromptsCreateInstance
     puts "\n================= Instance Summary ==================="
     puts "\nInstance Name: #{instance_name}"
     puts "        Linux: #{image.name}"
-    puts "Instance Size: #{flavor.name}"
+    puts "       Flavor: #{flavor.name}"
     puts "      Keypair: #{keypair.name}"
+    puts "      Network: #{network}"
     puts "     UserData: #{file}"
     puts "\n --- UserData --- \n#{userdata}\n --- End UserData ---\n" if userdata
     puts "\n=============== End Instance Summary ================="
@@ -52,7 +58,7 @@ class PromptsCreateInstance
 
     if continue =~ /^y(es)?$/i
       puts "Creating instance: #{instance_name}"
-      instance = @os_compute.instances.create_instance(instance_name, image.id, flavor.id, keypair.name, userdata)
+      instance = @os_compute.instances.create_instance(instance_name, image.id, flavor.id, keypair.name, {nics: network, user_data: userdata} )
     else
       puts "Abandoning creation of #{instance_name}! Returning to chooser."
       instance = nil
@@ -72,82 +78,64 @@ class PromptsCreateInstance
   end
 
   def image
-    images_numbered = Helpers.array_to_numhash(@os_compute.images.all_images)
-
-    # List available images in a numbered hash.
-    puts "\nAvailable Images:"
-    i_name_length = images_numbered.values.collect{|i| i.name}.max.size
-    printf("%0s %-#{i_name_length}s\n", 'Id', 'Image')
-    images_numbered.each do |id, image|
-      printf("%0s %-#{i_name_length}s\n", "#{id}.", image.name)
-    end
-
-    image_name = item_chooser(images_numbered, 'image')
-    print "Image Name: #{image_name}\n"
-    @os_compute.images.get_image_by_name(image_name)
+    images = Helpers.objects_to_numarray(@os_compute.images.all_images)
+    image  = item_chooser(images, 'image', multiple: false, create: false).first
+    puts "Selected: #{image.name}"
+    image
   end
 
   def flavor
-    flavors_numbered = Helpers.array_to_numhash(@os_compute.flavors.all_flavors.sort_by(&:ram))
-
-    puts "\nAvailable Instance Flavors:"
-    puts sprintf("%0s %-15s %-10s %-10s %0s", 'Id', 'Name', 'RAM', 'VCPUs', 'Disk')
-    flavors_numbered.each do |id, flavor|
-      print sprintf("%0s %-15s %-10s %-10s %0s\n",
-                    "#{id}.", flavor.name.split('.')[1], flavor.ram, flavor.vcpus, flavor.disk)
-    end
-
-    flavor_name = item_chooser(flavors_numbered, 'flavor')
-    print "Flavor Name: #{flavor_name.split('.')[1]}\n"
-    @os_compute.flavors.get_flavor_by_name(flavor_name)
+    flavors = Helpers.objects_to_numarray(@os_compute.flavors.all_flavors.sort_by(&:ram))
+    flavor  = item_chooser(flavors, 'flavor', multiple: false, create: false).first
+    puts "Selected: #{flavor.name}"
+    flavor
   end
 
   def keypair
-    keypairs = Helpers.objects_to_numhash(@os_compute.keypairs.all_keypairs)
-    keypair_name = nil
+    keypairs = Helpers.objects_to_numarray(@os_compute.keypairs.all_keypairs)
+    puts "\nEnter a new keypair name or select an existing keypair for this instance."
+    keypair, create = item_chooser(keypairs, 'keypair', multiple: false, create: true)
 
-    # List available keypairs
-    puts "\nAvailable Keypairs:"
-    print sprintf("%0s %-15s\n", 'Id', 'KeyPair Name')
-    keypairs.each do |id, key|
-      print sprintf("%0s %-15s\n", "#{id}.", key[:name])
+    if create
+      keypair = @os_compute.keypairs.create_keypair(keypair)
+      puts "Created keypair: #{keypair.name}"
     end
 
-    # Loop input until existing flavor is selected or create a new one
-    print 'Enter a keypair to use for this instance or enter a name for a new keypair : '
-    keypair_check = false
+    puts "Selected: #{keypair.name}"
+    keypair
+  end
 
-    until keypair_check == true
-      keypair_name = gets.chomp
+  def network
+    networks = Helpers.objects_to_numarray(
+      @os_network.networks.all_networks.sort_by do |n|
+        [ n.name == 'public' ? 0 : 1, n.name ]
+      end)
 
-      # Accept keypair Id as an entry
-      if keypair_name =~ /^[0-9]*$/
-        until keypairs.keys.include?(keypair_name.to_i)
-          print "#{keypair_name} is not a valid Id.
-Enter an Id from above, or \'return\' to restart keypair selection. : "
-          keypair_name = gets.chomp
-          return keypair(settings, compute) if keypair_name == 'return'
-        end
+    if networks.count == 1
+      network = networks.first.pop
+      puts "\nA single network was found. Adding instance to network: #{network.name}"
+      nics.push({ net_id: network.id })
+    else
+      # List available networks
+      puts "\nEnter one or more networks (comma separated) for this instance."
+      puts "  Ex: '1, 2, 3' or 'public, network-1, network-2'."
+      puts "    Order matters; 'public' should probably be entered first in most cases."
+      networks = item_chooser(networks, 'networks', multiple: true)
+    end
 
-        keypair_name = keypairs[keypair_name.to_i][:name]
-      end
-
-      keypair_check = Helpers.check_nested_hash_value(keypairs, :name, keypair_name)
-
-      if keypair_check == false
-        print "#{keypair_name} is not an existing keypair.
-Should we create a new keypair named #{keypair_name}? (Y/N): "
-
-        if gets.chomp =~ /^y(es)?$/i
-          puts "Creating keypair: #{keypair_name}!"
-          return @os_compute.keypairs.create_keypair(keypair_name)
-        else
-          print 'Please enter an option from above: '
-        end
+    nics = []
+    networks.each do |n|
+      if ! n.nil?
+        puts "Added network: #{n.name}"
+        nics.push({ net_id: n.id })
       end
     end
 
-    @os_compute.keypairs.get_keypair(keypair_name)
+    nics
+  end
+
+  def securitygroup
+    # to-do
   end
 
   def userdata
@@ -169,31 +157,52 @@ Should we create a new keypair named #{keypair_name}? (Y/N): "
       end
     end
 
-    return [file, userdata]
+    [file, userdata]
   end
 
   private
-  def item_chooser(items_numbered, item)
-    # Loop input until existing object is selected
-    item_name = nil
-    print "Which #{item} should we use for this instance?: "
+  def item_chooser(items_numbered, item, multiple: false, create: false)
+    selection = []
+    all_items = items_numbered.each_value.map(&:name)
 
-    until items_numbered.values.collect{|i| i.name}.include?(item_name)
-      item_name = gets.chomp
+    format = PrintFormats.printf_numhash_values(items_numbered, [:name])
+    printf("#{format}\n", 'Id ', item)
+    items_numbered.each do |id, i|
+      printf("#{format}\n", "#{id}. ", i.name)
+    end
+    print "Select #{item} to use for this instance "
+    print "or enter a name to create a new #{item}" if create
+    print ': '
 
-      if item_name =~ /^[0-9]*$/
-        until items_numbered.keys.include?(item_name.to_i)
-          print "#{item_name} is not a valid Id. Enter an Id from above: "
-          item_name = gets.chomp
+    iter = 0
+    until selection & all_items == selection && ! selection.empty?
+      print "Invalid input: #{selection}. Please enter values from above: " if iter > 0
+      selection = gets.chomp.gsub(/ /, '').split(',')
+      iter += 1
+
+      if selection.all? { |s| s =~ /^[0-9]*$/ }
+        all_nums = items_numbered.keys
+        selection = selection.map(&:to_i)
+
+        if selection & all_nums != selection
+          redo
+        else
+          selection = selection.collect { |s| items_numbered[s].name }
         end
-
-        item_name = items_numbered[item_name.to_i].name
       end
 
-      item_check = items_numbered.values.collect{|i| i.name}.include?(item_name)
-      print "#{item_name} is not a valid item. Please enter an option from above: " if item_check == false
+      if ! multiple && selection.count > 1
+        puts "Enter only a single value for #{item}."
+        redo
+      end
+
+      if create && selection & all_items != selection
+        puts "Creating new #{item}: #{selection.first}"
+        return selection.first, create
+      end
     end
-    item_name
+
+    items_numbered.values.collect { |i| i if selection.include?(i.name) }.compact
   end
 
   def editor(file)

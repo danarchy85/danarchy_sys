@@ -2,10 +2,11 @@ require_relative 'instance_manager/prompts_create_instance'
 require_relative 'instance_manager/instance_status'
 
 class InstanceManager
-  def self.manager(os_compute, settings)
+  def self.manager(os_compute, os_network, settings)
     @os_compute = os_compute
+    @os_network = os_network
     @settings   = settings
-    @prompts_create_instance = PromptsCreateInstance.new(@os_compute, @settings)
+    @prompts_create_instance = PromptsCreateInstance.new(@os_compute, @os_network, @settings)
     puts 'Instance Manager: enter \'help\' to view available commands or \'main\' for the main menu.'
     menu = Menus.numbered_menu('instance')
     instance = false
@@ -23,7 +24,7 @@ class InstanceManager
       abort('Exiting!') if cmd == 'exit'
 
       if cmd =~ /^[0-9]*$/
-        menu[cmd.to_i].map { |k, v| cmd = k } if menu.keys.include? cmd.to_i
+        cmd = menu[cmd.to_i] ? menu[cmd.to_i].keys.first : nil
       end
 
       if cmd == 'help'
@@ -143,8 +144,8 @@ class InstanceManager
       end
 
       unless instances_numhash.values.collect{|i| i[:name]}.include?(instance_name)
-        print "#{instance_name} is not a valid instance.
-Should we create a new instance named #{instance_name}? (Y/N): "
+        puts "#{instance_name} is not a valid instance."
+        print "Should we create a new instance named #{instance_name}? (Y/N): "
 
         if gets.chomp =~ /^y(es)?$/i
           instance = @prompts_create_instance.create_instance(instance_name)

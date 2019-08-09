@@ -5,16 +5,14 @@ class KeypairStatus
 
     keypairs.each do |keypair|
       single_keypair(keypair)
-      puts ''
     end
 
   end
 
   def self.single_keypair(keypair)
-    istats = { 'Name'  => keypair.name,
+    istats = { 'Name'        => keypair.name,
                'Fingerprint' => keypair.fingerprint,
-               'Public Key' => keypair.public_key,
-             }
+               'Public Key'  => keypair.public_key, }
 
     format = "%#{istats.keys.max.size + 2}s"
 

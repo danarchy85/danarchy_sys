@@ -1,14 +1,14 @@
 
 # Routine methods for DanarchySys
 class Helpers
-  def self.array_to_numhash(array)
-    numbered_hash = {}
+  def self.objects_to_numarray(objects)
+    numbered_array = {}
     
-    array.each.with_index(1) do |item, id|
-      numbered_hash[id] = item
+    objects.each.with_index(1) do |item, id|
+      numbered_array[id] = item
     end
 
-    numbered_hash
+    numbered_array
   end
 
   def self.hash_to_numhash(hash)
@@ -50,7 +50,9 @@ class Helpers
   end
 
   def self.hash_largest_nested_value(hash)
-    hash.each_value.flat_map(&:values).max_by(&:size)
+    values = hash.each_value.flat_map(&:values)
+    values.compact! if values.include?(nil)
+    values.max_by(&:size)
   end
 
   def self.check_nested_hash_value(hash, key, value)
