@@ -10,13 +10,10 @@ module DanarchySys
       def initialize(connection, settings)
         @settings = settings
         @compute = Fog::OpenStack::Compute.new(connection)
-        @instances = @compute.servers
-        @images = @compute.images(filters: {'status' => ['ACTIVE']})
-        @flavors = @compute.flavors
       end
 
       def instances
-        ComputeInstances.new(@compute, @instances, @settings)
+        ComputeInstances.new(@compute, @settings)
       end
 
       def keypairs
@@ -24,16 +21,16 @@ module DanarchySys
       end
 
       def images
-        ComputeImages.new(@compute, @images)
+        ComputeImages.new(@compute)
       end
 
       def flavors
-        ComputeFlavors.new(@compute, @flavors)
+        ComputeFlavors.new(@compute)
       end
 
-      def secgroups
-        ComputeSecgroups.new(@compute)
-      end
+      # def secgroups
+      #   ComputeSecgroups.new(@compute)
+      # end
 
       def ssh(instance, *cmd)
         instance = instances.get_instance(instance) if instance.class == String

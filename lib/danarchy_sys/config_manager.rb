@@ -54,7 +54,7 @@ module DanarchySys
 
         provider = nil
         if providers.count > 1
-          num_providers = Helpers.array_to_numhash(providers)
+          num_providers = Helpers.objects_to_numarray(providers)
           fields = PrintFormats.printf_hash(num_providers)
 
           printf("#{fields}\n", 'Id', 'Provider')

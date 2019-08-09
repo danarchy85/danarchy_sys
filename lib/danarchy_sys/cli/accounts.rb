@@ -1,7 +1,7 @@
 
 class Accounts
   def self.chooser(danarchysys_config)
-    accounts = Helpers.array_to_numhash(danarchysys_config[:accounts].keys)
+    accounts = Helpers.objects_to_numarray(danarchysys_config[:accounts].keys)
     account = 'nil'
 
     if accounts.count == 1

@@ -78,8 +78,15 @@ class ComputeKeypairs
     pem_check = pemfile_check(pemfile)
     kp_check = check_keypair(keypair_name)
 
-    @compute.delete_key_pair(keypair_name) if kp_check  == true
-    File.delete(pemfile) if pem_check == true
+    if kp_check  == true
+      @compute.delete_key_pair(keypair_name)
+      puts "Deleted keypair: #{keypair_name}"
+    end
+
+    if pem_check == true
+      File.delete(pemfile)
+      puts "Deleted pemfile: #{pemfile}"
+    end
 
     return true if check_keypair(keypair_name) == false
     false

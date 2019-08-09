@@ -36,6 +36,7 @@ class PrintFormats
 
     fields_arr.each do |f|
       hash.each_value do |v|
+        v = Helpers.object_to_hash(v) if v.class != Hash
         next if v[f] == nil
         a.push(v[f].size)
       end
