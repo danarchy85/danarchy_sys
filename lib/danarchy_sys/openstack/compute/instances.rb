@@ -33,8 +33,8 @@ class ComputeInstances
     return false if !instance.collect{ |i| i.name }.include?(instance_name)
 
     if instance.count > 1
-      puts " ! Warning: Multiple instances found for #{instance_name}!"
-      puts "     Using: #{instance.first.id}"
+      puts " ! Warning: Multiple instances found matching #{instance_name}!"
+      puts "     Using: #{instance.first.id} => #{instance.name}"
     end
 
     instance.first
